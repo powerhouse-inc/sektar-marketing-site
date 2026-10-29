@@ -1,0 +1,13 @@
+# Build-script approvals (pnpm 10). The Powerhouse switchboard (ph-cli, dev only)
+# needs protobufjs and pprof built; esbuild ships its binary through a script.
+onlyBuiltDependencies:
+  - "@apollo/protobufjs"
+  - "@datadog/pprof"
+  - esbuild
+  - protobufjs
+ignoredBuiltDependencies:
+  - "@reown/appkit"
+  - bufferutil
+  - keccak
+  - unrs-resolver
+  - utf-8-validate

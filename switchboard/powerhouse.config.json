@@ -1,0 +1,10 @@
+{
+  "logLevel": "info",
+  "packages": [
+    {
+      "packageName": "@powerhousedao/renown-package",
+      "version": "1.13.0",
+      "provider": "npm"
+    }
+  ]
+}
