@@ -13,11 +13,20 @@ import {
   forget,
   fromDirectory,
   knownEnvs,
+  redeemCloud,
   remember,
   typedEnv,
   type EnvKind,
   type Environment,
 } from "@/lib/environments";
+import { DOWNLOAD_URL, FREE_URL } from "@/lib/config";
+
+/* The card a visitor chose ("cloud" opens the dialog on Sektar cloud); kept
+   across the Renown redirect in sessionStorage. */
+const WANT_KEY = "sektar.site.want";
+/* How long the site waits for a new cloud Sektar to be set up and running. */
+const CLOUD_WAIT_MS = 15 * 60 * 1000;
+const CLOUD_POLL_MS = 10 * 1000;
 
 /**
  * The site's behaviour, on the markup rendered verbatim from the design
@@ -161,6 +170,15 @@ export function SiteController() {
 
     function open(from?: HTMLElement | null) {
       opener = from ?? (document.activeElement as HTMLElement | null);
+      const want = from?.dataset.siteWant;
+      if (want === "vetra" || want === "portle") {
+        kind = want;
+        try {
+          sessionStorage.setItem(WANT_KEY, want);
+        } catch {
+          // storage blocked: the choice just doesn't survive the redirect
+        }
+      }
       if (!dialog!.open) dialog!.showModal();
       const user = userOf(authRef.current);
       if (user) showWhere(user);
@@ -176,6 +194,7 @@ export function SiteController() {
         b.setAttribute("aria-pressed", String(b.dataset.siteKind === kind));
       });
       const cloud = kind === "vetra";
+      invite.hidden = !cloud;
       const { prefix, suffix } = cloudAffixes();
       $("[data-site-where-label]").textContent = cloud ? "Environment name" : "Your address";
       $("[data-site-prefix]").textContent = cloud ? prefix : "https://app.";
@@ -239,6 +258,13 @@ export function SiteController() {
     }
 
     function showWhere(user: User) {
+      try {
+        const want = sessionStorage.getItem(WANT_KEY);
+        sessionStorage.removeItem(WANT_KEY);
+        if (want === "vetra" || want === "portle") kind = want;
+      } catch {
+        // storage blocked
+      }
       paint(user);
       step("where");
       const list = $("[data-site-envs]");
@@ -279,6 +305,50 @@ export function SiteController() {
           env.kind === "vetra" ? "Your cloud isn't answering" : "Your computer isn't answering";
         step("down");
       });
+    }
+
+    /* ------------------------------------------------ a new cloud Sektar */
+    function sleep(ms: number) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    /** Redeems the code, then waits until the directory lists a READY cloud Sektar, and opens it. */
+    async function startCloud(user: User, code: string) {
+      busy("Setting up your Sektar…");
+      const bearer = await directoryBearer();
+      if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
+      try {
+        await redeemCloud(code, bearer);
+      } catch (err) {
+        return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
+      }
+      const deadline = Date.now() + CLOUD_WAIT_MS;
+      while (Date.now() < deadline) {
+        const found = (await fromDirectory(user.did, (await directoryBearer()) ?? bearer)).filter(
+          (e) => e.kind === "vetra",
+        );
+        const ready = found.find((e) => e.status === "READY");
+        if (ready) {
+          remember(user.did, ready);
+          return navigate(ready);
+        }
+        busy(
+          found.length
+            ? "Starting your Sektar… This takes a few minutes the first time."
+            : "Setting up your Sektar…",
+        );
+        await sleep(CLOUD_POLL_MS);
+      }
+      fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
+    }
+    function onInvite(e: SubmitEvent) {
+      e.preventDefault();
+      const user = userOf(authRef.current);
+      if (!user) return step("start");
+      const field = invite.querySelector<HTMLInputElement>("input")!;
+      const code = field.value.trim();
+      field.closest(".sk-field")?.classList.toggle("sk-field--error", !code);
+      if (!code) return field.focus();
+      void startCloud(user, code);
     }
 
     /* ------------------------------------------------ events */
@@ -348,10 +418,13 @@ export function SiteController() {
 
     const form = $<HTMLFormElement>("[data-site-where]");
     const input = $<HTMLInputElement>("[data-site-where-input]");
+    const invite = inviteForm(form);
+    enhanceCards();
     document.addEventListener("click", onDocumentClick);
     dialog.addEventListener("click", onDialogClick);
     dialog.addEventListener("close", onClose);
     form.addEventListener("submit", onSubmit);
+    invite.addEventListener("submit", onInvite);
     input.addEventListener("input", preview);
 
     api.current = { paint, open: () => open(), showWhere, go, busy, fail };
@@ -366,6 +439,8 @@ export function SiteController() {
       dialog.removeEventListener("click", onDialogClick);
       dialog.removeEventListener("close", onClose);
       form.removeEventListener("submit", onSubmit);
+      invite.removeEventListener("submit", onInvite);
+      invite.remove();
       input.removeEventListener("input", preview);
       api.current = null;
     };
@@ -422,3 +497,62 @@ export function SiteController() {
 
   return null;
 }
+
+/**
+ * "Have an invite code?": shown on Sektar cloud, above the address form. The
+ * page's markup is the design system's, verbatim, so the site adds it here.
+ */
+function inviteForm(where: HTMLFormElement): HTMLFormElement {
+  const form = document.createElement("form");
+  form.className = "site-where";
+  form.noValidate = true;
+  form.hidden = true;
+  form.innerHTML = `
+    <div class="sk-field">
+      <label class="sk-label" for="site-invite-input">Invite code</label>
+      <input id="site-invite-input" class="sk-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="sektar-…">
+      <p class="sk-hint">New here? Your code gives you your own Sektar in the cloud, set up in a few minutes.</p>
+    </div>
+    <div class="sk-modal__footer sk-mt-4"><button class="sk-btn sk-btn--primary" type="submit">Start my cloud Sektar</button></div>
+    <p class="site-divider">or open one you have</p>`;
+  where.parentElement?.insertBefore(form, where);
+  return form;
+}
+
+/**
+ * The three "Get started" cards, wired: Free opens Sektar in the browser,
+ * "On your own computer" offers the download (and Log in to reach it through
+ * its tunnel), "In the cloud" opens the dialog on Sektar cloud.
+ */
+function enhanceCards() {
+  const [free, local, cloud] = Array.from(document.querySelectorAll<HTMLElement>(".site-start .site-choice"));
+  const disabled = free?.querySelector<HTMLElement>("[aria-disabled]");
+  if (disabled) {
+    const a = document.createElement("a");
+    a.className = disabled.className;
+    a.href = FREE_URL;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Open in your browser";
+    disabled.replaceWith(a);
+  }
+  const localButton = local?.querySelector<HTMLElement>("[data-site-open]");
+  if (localButton && !local.querySelector("[data-site-download]")) {
+    const a = document.createElement("a");
+    a.className = "sk-btn sk-btn--primary";
+    a.href = DOWNLOAD_URL;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.dataset.siteDownload = "";
+    a.textContent = "Download";
+    localButton.before(a);
+    localButton.className = "sk-btn sk-btn--secondary";
+    localButton.dataset.siteWant = "portle";
+  }
+  const cloudButton = cloud?.querySelector<HTMLElement>("[data-site-open]");
+  if (cloudButton) {
+    cloudButton.dataset.siteWant = "vetra";
+    cloudButton.textContent = "Get it in the cloud";
+  }
+}
+
