@@ -59,6 +59,20 @@ design system doesn't have.
 Review the diff and commit it. `VERSION.json` tells you which design system the
 site shipped.
 
+## The three ways to start
+
+The "Get started" cards are wired by `components/site-controller.tsx` (the
+markup stays the design system's):
+
+- **Free** opens Sektar in the browser (`NEXT_PUBLIC_FREE_URL`): a Sektar
+  Connect where documents stay in the visitor's own browser.
+- **On your own computer** offers the desktop app (`NEXT_PUBLIC_DOWNLOAD_URL`,
+  the Sektar repo's latest release) and Log in, to reach a running one.
+- **In the cloud** opens the dialog on Sektar cloud. A signed-in person with an
+  invite code redeems it on Vetra (`NEXT_PUBLIC_VETRA_GRAPHQL_URL`, their Renown
+  bearer); Vetra sets up their own Sektar host, and the site waits until the
+  directory lists it READY, then opens it.
+
 ## Sign-in and forwarding
 
 `components/site-controller.tsx` gives the verbatim markup its behaviour, on the

@@ -6,6 +6,7 @@ import {
   CLOUD_URL_TEMPLATE,
   DIRECTORY_APP,
   DIRECTORY_URL,
+  VETRA_GRAPHQL_URL,
   PORTLE_URL_TEMPLATE,
 } from "@/lib/config";
 
@@ -15,6 +16,8 @@ export type Environment = {
   url: string;
   kind: EnvKind;
   name: string;
+  /** From the directory: the environment's status on Vetra (READY once it runs). */
+  status?: string;
   /** Last opened, ms since epoch (remembered environments only). */
   last?: number;
 };
@@ -135,10 +138,10 @@ export async function fromDirectory(did: string, bearer: string | null): Promise
     });
     if (!response.ok) return [];
     const body = (await response.json()) as {
-      environments?: { connectUrl: string; kind: EnvKind; name: string }[];
+      environments?: { connectUrl: string; kind: EnvKind; name: string; status?: string }[];
     };
     return (body.environments ?? [])
-      .map((e) => ({ url: e.connectUrl, kind: e.kind, name: e.name }))
+      .map((e) => ({ url: e.connectUrl, kind: e.kind, name: e.name, status: e.status }))
       .filter((e) => safeUrl(e.url));
   } catch {
     return [];
@@ -163,3 +166,26 @@ export async function answers(url: string): Promise<boolean> {
     clearTimeout(timer);
   }
 }
+
+/**
+ * Redeems an invite code for a cloud Sektar on Vetra, as the signed-in person
+ * (their Renown bearer). Vetra then sets up their own Sektar; the directory
+ * lists it, READY once it runs. Throws with Vetra's message when refused.
+ */
+export async function redeemCloud(code: string, bearer: string): Promise<void> {
+  const response = await fetch(VETRA_GRAPHQL_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${bearer}` },
+    body: JSON.stringify({
+      query:
+        "mutation ($input: RedeemInviteCodeInput!) { vetraSubscriptions { redeemInviteCode(input: $input) { __typename } } }",
+      variables: { input: { code: code.trim(), label: "Sektar" } },
+    }),
+  });
+  const body = (await response.json().catch(() => null)) as {
+    errors?: { message?: string }[];
+  } | null;
+  const message = body?.errors?.[0]?.message;
+  if (!response.ok || message) throw new Error(message || `Vetra answered ${response.status}`);
+}
+

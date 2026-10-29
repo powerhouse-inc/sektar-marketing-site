@@ -56,6 +56,18 @@ export const CLOUD_URL_TEMPLATE =
    Empty means the dialog offers remembered and typed addresses only. */
 export const DIRECTORY_URL = process.env.NEXT_PUBLIC_DIRECTORY_URL || null;
 
+/* "Free": Sektar in the browser, documents kept in the visitor's own browser. */
+export const FREE_URL =
+  process.env.NEXT_PUBLIC_FREE_URL ?? "https://calm-bat-b4qzzqbb-connect.vetra.io/";
+
+/* "On your own computer": the desktop app's installers, from the latest release. */
+export const DOWNLOAD_URL =
+  process.env.NEXT_PUBLIC_DOWNLOAD_URL ?? "https://github.com/powerhouse-inc/sektar/releases/latest";
+
+/* Vetra's GraphQL endpoint: an invite code is redeemed there for a cloud Sektar. */
+export const VETRA_GRAPHQL_URL =
+  process.env.NEXT_PUBLIC_VETRA_GRAPHQL_URL ?? "https://switchboard.vetra.io/graphql";
+
 /* Sektar's App on Vetra: the directory lists environments that run it. */
 export const DIRECTORY_APP =
   process.env.NEXT_PUBLIC_DIRECTORY_APP ?? "43622402-be06-435a-bbfa-bb649b0d6244";
