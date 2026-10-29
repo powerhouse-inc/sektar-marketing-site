@@ -1,0 +1,17 @@
+/* =============================================================================
+   Sektar Design System — bundle
+   Include this single file, or pick the layers you need.
+
+     <link rel="stylesheet" href="css/sektar.css">
+
+   Fonts (load before this sheet):
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+   Fraunces is self-hosted via fonts.css (assets/fonts/).
+   ============================================================================= */
+@import url("fonts.css");
+@import url("tokens.css");
+@import url("base.css");
+@import url("components.css");
+@import url("utilities.css");

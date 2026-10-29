@@ -1,0 +1,7 @@
+/* Extracted by scripts/sync-design-system.mjs from the design system's docs.css,
+   which is documentation-only. Drop this file once .doc-browser ships in components.css. */
+.doc-browser { border: 1px solid var(--sk-border-subtle); border-radius: var(--sk-radius-lg); overflow: hidden; box-shadow: var(--sk-shadow-md); background: var(--sk-surface); }
+.doc-browser__bar { display: flex; align-items: center; gap: var(--sk-space-4); height: 44px; padding: 0 var(--sk-space-4); background: var(--sk-bg-subtle); border-bottom: 1px solid var(--sk-border-subtle); }
+.doc-browser__dots { display: flex; gap: 7px; }
+.doc-browser__dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--sk-neutral-300); display: block; }
+.doc-browser__url { flex: 1; max-width: 420px; margin: 0 auto; height: 26px; line-height: 26px; text-align: center; font-size: var(--sk-text-xs); color: var(--sk-text-muted); background: var(--sk-surface); border-radius: var(--sk-radius-sm); border: 1px solid var(--sk-border-subtle); }

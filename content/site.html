@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sektar · Local-first automation for freelance admin</title>
+<meta name="description" content="Local-first automation for freelance admin. AI agents sort your mail, file your receipts and follow up your invoices, on your own computer or your own cloud. Smarter every day.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/sektar.css">
+<link rel="stylesheet" href="css/docs.css">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/sektar.js"></script>
+</head>
+<body class="site-body">
+<a class="sk-skip-link" href="#top">Skip to content</a>
+
+<!-- Icon sprite: copy of assets/icons.svg, inlined so <use> works from file:// -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!--
+    Sektar icon sprite · 24×24 grid · 20×20 live area · 2px padding · 2–3 tones
+    Tones are CSS custom properties so every icon recolours with the theme:
+      - -sk-icon-1  primary (Forest on light, Mint on dark)
+      - -sk-icon-2  secondary (Sage)
+      - -sk-icon-3  highlight (Mint on light, deep Forest on dark)
+    Usage:  <svg class="sk-icon"><use href="#i-dashboard"/></svg>
+  -->
+
+  <!-- Finance -->
+  <symbol id="i-dashboard" viewBox="0 0 24 24">
+    <rect x="3" y="14" width="5" height="7" rx="1.5" style="fill:var(--sk-icon-3)"/>
+    <rect x="9.5" y="9" width="5" height="12" rx="1.5" style="fill:var(--sk-icon-2)"/>
+    <path d="M16 4.5A1.5 1.5 0 0 1 17.5 3H19.5A1.5 1.5 0 0 1 21 4.5V19.5a1.5 1.5 0 0 1-1.5 1.5h-2A1.5 1.5 0 0 1 16 19.5z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-growth" viewBox="0 0 24 24">
+    <path d="M3 21v-3.5c0-3 1.5-5.2 4.5-6v9.5z" style="fill:var(--sk-icon-3)"/>
+    <path d="M9 21V13c0-3.6 1.6-6.4 5-7.4V21z" style="fill:var(--sk-icon-2)"/>
+    <path d="M15.5 21V9.8C15.5 5.6 17.8 3.4 21 3v8.5c0 5-2.2 8.5-5.5 9.5z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-transactions" viewBox="0 0 24 24">
+    <path d="M2.5 6.5h9.5V3.5L18.5 8 12 12.5V9.5H2.5a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1z" style="fill:var(--sk-icon-1)"/>
+    <path d="M21.5 17.5H12v3L5.5 16 12 11.5v3h9.5a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1z" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+  <symbol id="i-invoice" viewBox="0 0 24 24">
+    <path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" style="fill:var(--sk-icon-2)"/>
+    <path d="M14 2v4a1 1 0 0 0 1 1h4z" style="fill:var(--sk-icon-1)"/>
+    <rect x="7" y="11" width="8" height="1.7" rx=".85" style="fill:var(--sk-icon-3)"/>
+    <rect x="7" y="14.5" width="10" height="1.7" rx=".85" style="fill:var(--sk-icon-3)"/>
+    <rect x="7" y="18" width="6" height="1.7" rx=".85" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-card" viewBox="0 0 24 24">
+    <rect x="2" y="5" width="20" height="14" rx="2.5" style="fill:var(--sk-icon-2)"/>
+    <rect x="2" y="8.5" width="20" height="3" style="fill:var(--sk-icon-1)"/>
+    <rect x="5" y="14" width="5" height="2" rx="1" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-wallet" viewBox="0 0 24 24">
+    <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h11A2.5 2.5 0 0 1 19 7.5V8H5.5A2.5 2.5 0 0 1 3 7.5z" style="fill:var(--sk-icon-1)"/>
+    <rect x="3" y="7" width="18" height="13" rx="2.5" style="fill:var(--sk-icon-2)"/>
+    <path d="M15 12h6v5h-6a2.5 2.5 0 0 1 0-5z" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-customers" viewBox="0 0 24 24">
+    <circle cx="16.5" cy="8.5" r="3" style="fill:var(--sk-icon-2)"/>
+    <path d="M14.5 21v-.5a8.5 8.5 0 0 0-2.4-5.9A5.5 5.5 0 0 1 22 19.5v1.5z" style="fill:var(--sk-icon-2)"/>
+    <circle cx="9" cy="8" r="3.6" style="fill:var(--sk-icon-1)"/>
+    <path d="M2.5 20.2a6.5 6.5 0 0 1 13 0v.8h-13z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-reports" viewBox="0 0 24 24">
+    <rect x="3" y="11" width="5" height="10" rx="1.5" style="fill:var(--sk-icon-2)"/>
+    <rect x="9.5" y="4" width="5" height="17" rx="1.5" style="fill:var(--sk-icon-1)"/>
+    <rect x="16" y="14" width="5" height="7" rx="1.5" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-trends" viewBox="0 0 24 24">
+    <path d="M3 17l5-6 4 3 5-7 4 3V21H3z" style="fill:var(--sk-icon-3)"/>
+    <path d="M3 17l5-6 4 3 5-7 4 3" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-pie" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9.5" style="fill:var(--sk-icon-3)"/>
+    <path d="M12 12h9.5A9.5 9.5 0 0 1 12 21.5z" style="fill:var(--sk-icon-2)"/>
+    <path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5H12z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-tax" viewBox="0 0 24 24">
+    <path d="M10.3 4.2a2 2 0 0 1 3.4 0l8 14A2 2 0 0 1 20 21H4a2 2 0 0 1-1.7-2.8z" style="fill:var(--sk-icon-1)"/>
+    <rect x="11" y="9" width="2" height="6" rx="1" style="fill:var(--sk-icon-3)"/>
+    <circle cx="12" cy="17.6" r="1.2" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-bank" viewBox="0 0 24 24">
+    <path d="M11.2 2.6a1.5 1.5 0 0 1 1.6 0l8.2 4.8c.9.5.5 1.8-.5 1.8H3.5c-1 0-1.4-1.3-.5-1.8z" style="fill:var(--sk-icon-1)"/>
+    <rect x="4" y="10.5" width="2.6" height="7" style="fill:var(--sk-icon-2)"/>
+    <rect x="8.6" y="10.5" width="2.6" height="7" style="fill:var(--sk-icon-2)"/>
+    <rect x="12.8" y="10.5" width="2.6" height="7" style="fill:var(--sk-icon-2)"/>
+    <rect x="17.4" y="10.5" width="2.6" height="7" style="fill:var(--sk-icon-2)"/>
+    <rect x="2" y="18.5" width="20" height="2.8" rx="1.2" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-cart" viewBox="0 0 24 24">
+    <path d="M6.6 6.5h14.1a.8.8 0 0 1 .8 1l-1.9 6.4a1 1 0 0 1-1 .7H8.4z" style="fill:var(--sk-icon-1)"/>
+    <path d="M2.5 3.5h2.6l3.1 10.7H17" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+    <circle cx="9.5" cy="19" r="1.8" style="fill:var(--sk-icon-2)"/>
+    <circle cx="16.5" cy="19" r="1.8" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 2.5 20 5.5v6c0 4.8-3.4 8.6-8 10-4.6-1.4-8-5.2-8-10v-6z" style="fill:var(--sk-icon-2)"/>
+    <path d="M12 2.5v19c4.6-1.4 8-5.2 8-10v-6z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <!-- Files & communication -->
+  <symbol id="i-folder" viewBox="0 0 24 24">
+    <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2c.6 0 1.2.3 1.6.7l1.5 1.3h5.7A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" style="fill:var(--sk-icon-1)"/>
+    <rect x="3" y="10" width="18" height="10" rx="2.5" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+  <symbol id="i-mail" viewBox="0 0 24 24">
+    <rect x="2.5" y="5" width="19" height="14" rx="2.5" style="fill:var(--sk-icon-2)"/>
+    <path d="M2.5 7.5 12 13.6l9.5-6.1A2.5 2.5 0 0 0 19 5H5a2.5 2.5 0 0 0-2.5 2.5z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-calendar" viewBox="0 0 24 24">
+    <rect x="3" y="4.5" width="18" height="16.5" rx="2.5" style="fill:var(--sk-icon-2)"/>
+    <path d="M3 7a2.5 2.5 0 0 1 2.5-2.5h13A2.5 2.5 0 0 1 21 7v3H3z" style="fill:var(--sk-icon-1)"/>
+    <rect x="6.5" y="2.5" width="2.2" height="4.5" rx="1.1" style="fill:var(--sk-icon-1)"/>
+    <rect x="15.3" y="2.5" width="2.2" height="4.5" rx="1.1" style="fill:var(--sk-icon-1)"/>
+    <circle cx="8" cy="14" r="1.15" style="fill:var(--sk-icon-3)"/>
+    <circle cx="12" cy="14" r="1.15" style="fill:var(--sk-icon-3)"/>
+    <circle cx="16" cy="14" r="1.15" style="fill:var(--sk-icon-3)"/>
+    <circle cx="8" cy="17.6" r="1.15" style="fill:var(--sk-icon-3)"/>
+    <circle cx="12" cy="17.6" r="1.15" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-pin" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="20.2" rx="6" ry="1.8" style="fill:var(--sk-icon-3)"/>
+    <path d="M12 2.5a7 7 0 0 0-7 7c0 4.6 4.6 8.7 6.3 10.1a1.1 1.1 0 0 0 1.4 0C14.4 18.2 19 14.1 19 9.5a7 7 0 0 0-7-7z" style="fill:var(--sk-icon-1)"/>
+    <circle cx="12" cy="9.5" r="2.8" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-bell" viewBox="0 0 24 24">
+    <path d="M12 2.5a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.8 2.2L4 16a1 1 0 0 0 .8 1.6h14.4A1 1 0 0 0 20 16l-1.2-2.1a3.5 3.5 0 0 1-.8-2.2V8.5a6 6 0 0 0-6-6z" style="fill:var(--sk-icon-1)"/>
+    <path d="M9.3 19.2a2.7 2.7 0 0 0 5.4 0z" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+  <symbol id="i-upload" viewBox="0 0 24 24">
+    <rect x="3" y="16" width="18" height="5" rx="2" style="fill:var(--sk-icon-2)"/>
+    <path d="M12 2.5l5.8 5.8h-3.6V15h-4.4V8.3H6.2z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-download" viewBox="0 0 24 24">
+    <rect x="3" y="16" width="18" height="5" rx="2" style="fill:var(--sk-icon-2)"/>
+    <path d="M12 15.2 6.2 9.4h3.6V2.7h4.4v6.7h3.6z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <!-- System -->
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <g style="fill:var(--sk-icon-1)">
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(45 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(90 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(135 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(180 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(225 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(270 12 12)"/>
+      <rect x="10.5" y="2" width="3" height="4.5" rx="1.2" transform="rotate(315 12 12)"/>
+      <circle cx="12" cy="12" r="7"/>
+    </g>
+    <circle cx="12" cy="12" r="3.2" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-help" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" style="fill:var(--sk-icon-1)"/>
+    <path d="M9.2 9.6a2.8 2.8 0 1 1 4.1 2.5c-.8.4-1.3 1-1.3 1.9v.4" fill="none" stroke-width="2.1" stroke-linecap="round" style="stroke:var(--sk-icon-3)"/>
+    <circle cx="12" cy="17.4" r="1.25" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="7.5" style="fill:var(--sk-icon-1)"/>
+    <circle cx="10.5" cy="10.5" r="4.6" style="fill:var(--sk-icon-3)"/>
+    <rect x="16.2" y="14.6" width="3.2" height="7.6" rx="1.6" transform="rotate(-45 17.8 18.4)" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+  <symbol id="i-plus" viewBox="0 0 24 24">
+    <rect x="10.4" y="4" width="3.2" height="16" rx="1.6" style="fill:var(--sk-icon-1)"/>
+    <rect x="4" y="10.4" width="16" height="3.2" rx="1.6" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-plus-circle" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" style="fill:var(--sk-icon-1)"/>
+    <rect x="10.7" y="6.5" width="2.6" height="11" rx="1.3" style="fill:var(--sk-icon-3)"/>
+    <rect x="6.5" y="10.7" width="11" height="2.6" rx="1.3" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-leaf" viewBox="0 0 24 24">
+    <path d="M20.5 3.5C10 3.5 3.5 10 3.5 20.5c10.5 0 17-6.5 17-17z" style="fill:var(--sk-icon-1)"/>
+    <path d="M3.5 20.5C7 14.5 12 9.5 20.5 3.5" fill="none" stroke-width="1.6" stroke-linecap="round" style="stroke:var(--sk-icon-3)"/>
+  </symbol>
+
+  <symbol id="i-sun" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="4.2" style="fill:var(--sk-icon-1)"/>
+    <g fill="none" stroke-width="2" stroke-linecap="round" style="stroke:var(--sk-icon-2)">
+      <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>
+    </g>
+  </symbol>
+
+  <symbol id="i-moon" viewBox="0 0 24 24">
+    <path d="M20.5 14.3A8.8 8.8 0 0 1 9.7 3.5a8.8 8.8 0 1 0 10.8 10.8z" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+
+  <symbol id="i-monitor" viewBox="0 0 24 24">
+    <rect x="2" y="3.5" width="20" height="13.5" rx="2.5" style="fill:var(--sk-icon-1)"/>
+    <rect x="4.2" y="5.7" width="15.6" height="9.1" rx="1" style="fill:var(--sk-icon-3)"/>
+    <rect x="10.5" y="17" width="3" height="2.5" style="fill:var(--sk-icon-2)"/>
+    <rect x="7" y="19.5" width="10" height="2" rx="1" style="fill:var(--sk-icon-2)"/>
+  </symbol>
+
+
+  <symbol id="i-sync" viewBox="0 0 24 24">
+    <path d="M4.8 11.2A7.3 7.3 0 0 1 17.6 7.4" fill="none" stroke-width="2.2" stroke-linecap="round" style="stroke:var(--sk-icon-1)"/>
+    <path d="M18 3.6v4.2h-4.2" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+    <path d="M19.2 12.8A7.3 7.3 0 0 1 6.4 16.6" fill="none" stroke-width="2.2" stroke-linecap="round" style="stroke:var(--sk-icon-2)"/>
+    <path d="M6 20.4v-4.2h4.2" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-2)"/>
+  </symbol>
+
+  <!-- Glyphs (single tone, stroke) -->
+  <symbol id="i-chevron-right" viewBox="0 0 24 24">
+    <path d="M9 6l6 6-6 6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24">
+    <path d="M6 9l6 6 6-6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24">
+    <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-arrow-up-right" viewBox="0 0 24 24">
+    <path d="M7 17 17 7M9 7h8v8" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-arrow-down-right" viewBox="0 0 24 24">
+    <path d="M7 7l10 10M17 9v8H9" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-close" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6 6 18" fill="none" stroke-width="2.2" stroke-linecap="round" style="stroke:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24">
+    <rect x="3" y="5.5" width="18" height="2.4" rx="1.2" style="fill:var(--sk-icon-1)"/>
+    <rect x="3" y="10.8" width="18" height="2.4" rx="1.2" style="fill:var(--sk-icon-1)"/>
+    <rect x="3" y="16.1" width="18" height="2.4" rx="1.2" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+  <symbol id="i-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" style="fill:var(--sk-icon-1)"/>
+    <rect x="10.8" y="10.5" width="2.4" height="7" rx="1.2" style="fill:var(--sk-icon-3)"/>
+    <circle cx="12" cy="7.4" r="1.35" style="fill:var(--sk-icon-3)"/>
+  </symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" style="fill:var(--sk-icon-1)"/>
+    <path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sk-icon-3)"/>
+  </symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24">
+    <rect x="3" y="3" width="12" height="12" rx="2.5" style="fill:var(--sk-icon-2)"/>
+    <rect x="9" y="9" width="12" height="12" rx="2.5" style="fill:var(--sk-icon-1)"/>
+  </symbol>
+</svg>
+
+<!-- Brand marks sprite: copy of assets/marks.svg (symbol + wordmark for the live lockup) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- Sektar brand marks as reusable symbols.
+       Symbol tones come from --sk-mark-1..4 (theme-aware); the wordmark uses currentColor.
+       Usage: <svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg>  -->
+  <symbol id="sektar-symbol" viewBox="0 0 167 152">
+    <path d="M42.7294 79.1809V79.5825V151.577H0V137.909C0 122.932 1.4838 109.613 11.0683 97.575C18.9014 87.7364 29.3702 80.6941 42.7294 79.1809Z" style="fill:var(--sk-mark-1)"/>
+    <path d="M48.2294 122.894V104.409C48.2294 86.9906 49.7149 71.8009 60.4906 57.4487C69.0291 46.0764 80.2278 39.5635 94.6577 37.522V114.026V151.577H48.2294V122.894Z" style="fill:var(--sk-mark-2)"/>
+    <path d="M48.2294 122.894V104.409C48.2294 86.9906 49.7149 71.8009 60.4906 57.4487C69.0291 46.0764 80.2278 39.5635 94.6577 37.522V114.026V107.617V79.2148C73.4793 81.2118 56.2142 99.8318 50.3763 118.58C49.9835 119.842 48.2294 121.811 48.2294 122.894Z" style="fill:var(--sk-mark-1)"/>
+    <path d="M162.39 0.097086C163.512 0.006809 166.416 0.025212 166.416 0V50.95V70.2865C166.416 86.3572 166.002 97.3809 158.846 112.304C148.608 133.657 128.368 150.103 104.057 151.577H100.158V82.7054V62.6341V44.4896C107.958 16.6406 135.787 1.64275 162.39 0.097086Z" style="fill:var(--sk-mark-3)"/>
+    <path d="M166.416 67.1074C166.416 70.3105 166.416 73.7365 166.382 76.9326C166.187 89.608 164.973 99.5264 158.846 112.304C154.55 121.264 148.492 129.359 141.112 135.827C130.379 144.903 116.69 151.577 100.158 151.577V133.918V132.648V123.559V122.929V126.439C103.261 111.318 109.307 98.9847 119.795 87.6152C129.173 77.551 141.58 70.7166 155.192 68.1162C159.093 67.4105 162.431 67.2961 166.416 67.1074Z" style="fill:var(--sk-mark-4)"/>
+  </symbol>
+  <symbol id="sektar-wordmark" viewBox="-2 -1 321 93" fill="currentColor">
+    <path d="M26.8326 4.0435C36.215 3.79291 43.1198 5.55392 51.6759 9.0447C52.1102 15.0608 52.2023 21.7168 52.3767 27.7536L49.7304 28.3423C48.3041 24.9321 46.6783 21.437 44.5771 18.4249C40.9563 13.235 35.5734 9.31909 29.0716 9.1179C22.306 8.90853 14.8777 12.5457 14.8185 20.1367C14.754 28.3986 21.8014 32.0836 28.2141 35.3904C40.4963 41.9 57.2645 47.937 56.7909 64.7472C56.7397 67.5026 56.2763 70.3763 55.2905 72.9617C50.276 86.117 36.9459 89.9068 24.1786 89.6457C16.0352 89.0718 8.69563 87.5535 1.44724 83.659L0.0406398 65.6274C-0.0930064 63.7152 -0.0103106 63.3514 2.0909 63.0817C2.61576 63.0143 3.07994 63.2324 3.34108 63.7159C6.19604 69.0005 8.12854 74.8274 12.8627 78.9031C17.6771 83.1906 22.8217 84.6284 29.1517 84.3673C37.2621 84.0327 42.6205 78.2982 42.0104 70.0827C41.3002 60.52 32.1777 56.9087 24.7608 53.1814C18.8277 50.1813 13.5422 47.8515 8.26372 43.7009C-1.09203 36.3446 -1.97225 21.9205 5.60411 13.0287C10.8084 6.92049 18.9024 4.56003 26.8326 4.0435Z"/>
+    <path d="M131.297 0.136493C132.234 -0.0117076 132.488 -0.0818404 133.397 0.150315C134.155 1.09634 133.824 17.4716 133.824 20.0548L133.845 57.9683C139.946 51.8442 147.432 45.3733 153.044 38.9001C151.506 36.1142 150.579 36.1206 148.323 34.142C147.732 33.6222 147.686 33.3798 147.675 32.7169C148.712 31.7376 169.655 31.7747 171.545 32.39C171.852 33.0501 171.942 34.5807 171.184 34.8144C161.867 37.6922 154.678 45.0953 147.724 51.8363C151.447 57.408 155.492 63.0634 159.619 68.5927C163.718 74.0835 167.973 82.5566 174.003 85.8843C174.947 86.4065 175.675 86.805 175.388 87.8864L174.799 88.2184C168.874 88.1163 161.608 88.5642 156.001 88.2095C149.345 78.4858 143.3 69.6408 136.267 60.0851L133.85 62.0478C133.704 66.5345 133.599 79.1848 134.098 83.263C135.519 84.7409 138.968 86.1864 139.247 87.6776C137.788 88.9315 118.642 87.9015 115.355 88.1191C114.842 88.1529 114.443 87.9942 114.118 87.5993C114.563 86.0161 117.725 85.5203 119.615 82.8671C120.145 79.9417 119.963 73.178 119.95 69.9943L119.927 49.0714L119.935 25.338C119.935 21.3527 119.994 16.9863 119.771 13.01C119.466 7.60719 114.441 9.14525 114.238 6.44309C114.94 5.3079 128.896 0.938159 131.297 0.136493Z"/>
+    <path d="M233.578 31.1759C236.361 30.9271 241.305 31.0312 243.916 31.632C258.067 34.8871 256.295 45.0408 256.267 55.9806L256.295 74.589C256.303 76.3072 256.231 78.1027 256.425 79.8058C256.873 83.7538 261.763 81.8136 263.215 83.8878C263.256 85.1453 262.545 86.051 261.464 86.6417C254.065 90.6892 245.043 91.3935 242.974 81.4415C241.441 83.1737 239.748 84.7206 237.851 86.0489C230.583 91.1366 219.563 91.3889 214.164 83.4464C213.728 82.7151 213.344 81.9536 213.011 81.1691C211.698 78.0341 211.803 74.0798 213.114 70.9552C214.087 68.6844 215.602 66.6881 217.53 65.1437C222.486 61.1075 235.879 56.4695 242.321 53.8341C242.395 49.0006 243.414 40.5488 238.906 37.3536C237.126 36.0915 234.514 35.9868 232.446 36.3907C224.98 37.8495 229.151 43.9062 226.38 48.421C224.486 51.3315 219.637 51.9054 216.885 49.7443C213.391 46.9976 214.399 41.8148 216.862 38.8497C221.04 33.8173 227.328 31.8642 233.578 31.1759ZM241.858 58.9737C236.663 60.8412 229.843 62.9274 227.333 68.3263C225.759 71.7118 225.695 77.016 228.792 79.5841C233.754 82.7864 238.225 81.3454 242.29 77.5362C242.503 71.5263 242.385 65.3648 242.354 59.338C242.119 59.1041 242.129 59.0329 241.858 58.9737Z"/>
+    <path d="M85.3456 31.167C92.6859 30.4608 100.031 31.8006 105.454 37.1397C111.255 42.8503 111.952 48.9276 111.998 56.6729C100.29 57.0038 88.0262 56.362 76.2567 56.8242C76.5205 63.3057 77.3068 68.7276 81.5849 73.9307C86.9947 80.5113 96.5643 81.7391 103.887 77.7598C105.919 76.6556 107.502 75.2711 109.248 73.7735C109.32 73.7313 109.854 73.5822 109.973 73.5469C111.002 74.0436 110.787 73.7845 111.376 74.626C111.563 75.8891 110.72 77.0537 110.014 78.0381C105.495 84.346 100.554 88.3445 92.6884 89.4395C77.1322 91.6053 64.3304 81.4756 62.2489 66C61.1173 57.5994 63.0358 48.0213 68.164 41.1309C72.6009 35.1644 78.0029 32.177 85.3456 31.167ZM87.3808 35.374C87.0173 35.3884 86.6534 35.413 86.2899 35.4463C78.4535 37.9748 76.9713 44.6868 76.4413 52.1104L88.1386 52.1113L97.8573 52.084C97.6167 45.1605 96.7488 35.0264 87.3808 35.374Z"/>
+    <path d="M190.97 17.5585L194.457 17.5186L194.48 32.0468C199.705 31.9977 204.931 32.0005 210.156 32.055L210.126 38.5206C205.363 38.8331 199.411 38.6422 194.582 38.6084C194.505 44.3426 194.044 74.2144 195.396 78.1647C201.006 83.9813 209.639 77.6686 210.172 80.7289C209.555 82.8938 207.406 85.0367 205.696 86.4137C202.45 88.3964 198.74 89.495 194.935 89.6002C187.306 89.7576 181.202 85.4334 180.741 77.4869C180.501 73.3173 180.621 69.109 180.626 64.9305C180.67 56.2051 180.657 47.4794 180.585 38.7543C177.904 38.7484 175.224 38.6744 172.546 38.5321L172.487 35.0469C180.454 31.6406 186.323 24.7128 190.97 17.5585Z"/>
+    <path d="M282.909 30.8582L283.316 30.9631C283.79 32.031 283.539 41.7352 283.513 43.616C286.225 38.324 289.55 32.6355 295.774 31.1768C299.612 30.2774 303.399 31.6731 304.338 35.8432C304.85 38.1256 304.441 40.5178 303.197 42.4992C298.765 49.4611 289.724 38.1407 285.052 46.0368C283.065 49.3955 283.37 57.9024 283.623 61.8966C283.989 67.6237 282.704 77.7925 283.938 83.0215C285.631 84.8746 290.306 86.0295 290.382 87.6226C289.922 88.0114 289.171 88.1601 288.577 88.166C282.883 88.2229 277.187 88.1924 271.493 88.2385C269.539 88.2543 267.427 88.3775 265.499 88.0916C264.872 87.6554 265.059 87.9037 264.821 87.1299C265.663 84.2906 269.69 85.3599 269.762 82.4622C270.09 69.3294 270.118 56.0751 269.87 42.9366C269.816 40.0717 266.677 39.5777 264.897 38.0806C264.485 37.185 264.542 37.5474 264.606 36.5876C265.873 35.3252 280.233 31.4479 282.909 30.8582Z"/>
+  </symbol>
+</svg>
+
+<!-- ============================================================ PROTOTYPE BAR (documentation, not part of the site) -->
+<header class="sk-topbar doc-topbar">
+  <a href="index.html" class="sk-logo-swap sk-logo" aria-label="Sektar Design System">
+    <img class="sk-logo-swap__light" src="assets/logos/sektar-logo-horizontal-light.svg" alt="Sektar">
+    <img class="sk-logo-swap__dark" src="assets/logos/sektar-logo-horizontal-dark.svg" alt="Sektar">
+  </a>
+  <span class="sk-eyebrow sk-hide-mobile">Design System · Site prototype</span>
+  <span class="sk-topbar__spacer"></span>
+  <a class="sk-btn sk-btn--ghost sk-btn--sm sk-hide-mobile" href="#notes">Prototype notes</a>
+  <div class="sk-segmented" role="group" aria-label="Colour theme">
+    <button class="sk-segmented__item" type="button" data-sk-theme-toggle="light">Light</button>
+    <button class="sk-segmented__item" type="button" data-sk-theme-toggle="dark">Dark</button>
+    <button class="sk-segmented__item" type="button" data-sk-theme-toggle="auto">Auto</button>
+  </div>
+</header>
+
+<!-- ============================================================ SITE HEADER -->
+<header class="site-header">
+  <div class="sk-container site-header__inner">
+    <a class="site-header__brand sk-lockup sk-lockup--no-tagline" href="#top" style="--sk-lockup-h:26px" aria-label="Sektar home"><svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg><svg class="sk-lockup__wordmark"><use href="#sektar-wordmark"/></svg><span class="sk-lockup__tagline">Smarter every day</span></a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="#week">A week with Sektar</a>
+      <a href="#why">Why Sektar</a>
+      <a href="#start">Get started</a>
+    </nav>
+    <div class="site-header__end">
+      <a class="sk-btn sk-btn--ghost site-header__demo" href="#start">Start for free</a>
+      <button class="sk-btn sk-btn--primary sk-btn--pill site-header__login" type="button" data-site-open>Log in</button>
+      <button class="sk-btn sk-btn--secondary sk-btn--pill site-header__user" type="button" data-site-open><span class="sk-avatar sk-avatar--sm sk-avatar--forest" data-site-initials>MV</span><span data-site-username>Open my Sektar</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============================================================ HERO: one outcome, one line, one action -->
+<section class="sk-container site-hero">
+  <div>
+    <p class="sk-tagline">Smarter every day</p>
+    <h1 class="sk-display-xl">Local-first automation <br class="site-br">for freelance admin.</h1>
+    <p class="sk-lead">AI agents sort your mail, file your receipts and follow up your invoices, on your own computer or your own cloud.</p>
+    <div class="site-actions">
+      <a class="sk-btn sk-btn--primary sk-btn--lg sk-btn--pill" href="#start">Start for free <svg class="sk-icon"><use href="#i-arrow-right"/></svg></a>
+      <button class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" type="button" data-site-open>Log in</button>
+    </div>
+  </div>
+
+  <div class="site-stage">
+    <img class="site-stage__photo" src="assets/photos/laptop-workspace-with-coffee.jpg" alt="">
+    <div class="doc-browser" role="img" aria-label="Marit's Sektar on a Monday morning: money owed, invoices due, tax set aside">
+      <div class="doc-browser__bar"><span class="doc-browser__dots"><i></i><i></i><i></i></span><span class="doc-browser__url">app.marit.studio</span></div>
+      <div class="site-mock">
+        <aside class="site-mock__side">
+          <span class="sk-lockup sk-lockup--product" style="--sk-lockup-h:22px"><svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg><svg class="sk-lockup__wordmark"><use href="#sektar-wordmark"/></svg><span class="sk-lockup__tagline">Finance</span></span>
+          <ul class="sk-nav">
+            <li><span class="sk-nav__item is-active"><svg class="sk-icon"><use href="#i-dashboard"/></svg>Overview</span></li>
+            <li><span class="sk-nav__item"><svg class="sk-icon"><use href="#i-invoice"/></svg>Invoices</span></li>
+            <li><span class="sk-nav__item"><svg class="sk-icon"><use href="#i-wallet"/></svg>Receipts</span></li>
+            <li><span class="sk-nav__item"><svg class="sk-icon"><use href="#i-bank"/></svg>Bank</span></li>
+            <li><span class="sk-nav__item"><svg class="sk-icon"><use href="#i-customers"/></svg>Clients</span></li>
+            <li><span class="sk-nav__item"><svg class="sk-icon"><use href="#i-tax"/></svg>Tax</span></li>
+          </ul>
+        </aside>
+        <div class="site-mock__main">
+          <p class="site-mock__greet">Good morning, Marit.</p>
+          <div class="site-mock__stats">
+            <div class="sk-card sk-card--compact"><div class="sk-stat__label">Owed to you</div><div class="sk-stat__value">€6,240</div></div>
+            <div class="sk-card sk-card--compact"><div class="sk-stat__label">Invoices due this week</div><div class="sk-stat__value">2</div></div>
+            <div class="sk-card sk-card--compact"><div class="sk-stat__label">Set aside for tax</div><div class="sk-stat__value">€3,180</div></div>
+          </div>
+          <div class="sk-card sk-card--compact">
+            <ul class="sk-list">
+              <li><span class="sk-list-item"><span class="sk-icon-tile sk-icon-tile--sm"><svg class="sk-icon"><use href="#i-invoice"/></svg></span><span class="sk-list-item__body"><div class="sk-list-item__title">Northwind · Product design, October</div><div class="sk-list-item__meta">Due Friday</div></span><span class="sk-badge sk-badge--warning">Due</span></span></li>
+              <li><span class="sk-list-item"><span class="sk-icon-tile sk-icon-tile--sm"><svg class="sk-icon"><use href="#i-invoice"/></svg></span><span class="sk-list-item__body"><div class="sk-list-item__title">Bright Media · Brand refresh</div><div class="sk-list-item__meta">Paid yesterday</div></span><span class="sk-badge sk-badge--success">Paid</span></span></li>
+              <li><span class="sk-list-item"><span class="sk-icon-tile sk-icon-tile--sm"><svg class="sk-icon"><use href="#i-wallet"/></svg></span><span class="sk-list-item__body"><div class="sk-list-item__title">Train to Rotterdam · €24.60</div><div class="sk-list-item__meta">Filed overnight</div></span><span class="sk-badge sk-badge--mint">Filed</span></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ A WEEK: show, don't tell -->
+<section class="site-section site-section--subtle" id="week">
+  <div class="sk-container">
+    <div class="site-head">
+      <p class="sk-eyebrow">A week with Sektar</p>
+      <h2>The admin happens. You barely notice.</h2>
+    </div>
+    <div class="site-week">
+      <figure class="site-moment">
+        <div class="sk-card site-moment__mock" aria-hidden="true">
+          <ul class="sk-feed">
+            <li class="sk-feed__item"><span class="sk-feed__icon"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-feed__text"><b>Train to Rotterdam</b> · €24.60</div><div class="sk-feed__sub">Matched to your card payment</div></div></li>
+            <li class="sk-feed__item"><span class="sk-feed__icon"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-feed__text"><b>Adobe</b> · €62.99</div><div class="sk-feed__sub">Filed under software</div></div></li>
+            <li class="sk-feed__item"><span class="sk-feed__icon"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-feed__text"><b>Café Loetje</b> · €18.40</div><div class="sk-feed__sub">Client lunch, Northwind</div></div></li>
+          </ul>
+        </div>
+        <figcaption><span class="site-moment__when">Monday, 07:10</span>Receipts filed while you slept.</figcaption>
+      </figure>
+      <figure class="site-moment">
+        <div class="sk-card site-moment__mock" aria-hidden="true">
+          <div class="sk-alert sk-alert--success"><svg class="sk-icon"><use href="#i-check-circle"/></svg><div><div class="sk-alert__title">Northwind paid €4,800</div>Invoice 2026-041, two days early</div></div>
+          <p class="sk-small sk-text-muted" style="margin:var(--sk-space-4) 0 0">A friendly reminder went out last week. You didn't have to write it.</p>
+        </div>
+        <figcaption><span class="site-moment__when">Wednesday</span>Paid, without chasing.</figcaption>
+      </figure>
+      <figure class="site-moment">
+        <div class="sk-card site-moment__mock" aria-hidden="true">
+          <div class="sk-stat__label">Set aside for tax this quarter</div>
+          <div class="sk-stat__value">€3,180</div>
+          <div class="sk-progress sk-progress--forest sk-mt-3"><div class="sk-progress__bar" style="width:82%"></div></div>
+          <p class="sk-small sk-text-muted" style="margin:var(--sk-space-3) 0 0">Ready for your accountant on day one.</p>
+        </div>
+        <figcaption><span class="site-moment__when">Friday</span>Tax set aside, to the euro.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ WHY: three benefits, one proof line each -->
+<section class="site-section" id="why">
+  <div class="sk-container">
+    <div class="site-why">
+      <div class="site-benefit"><span class="sk-icon-tile"><svg class="sk-icon"><use href="#i-leaf"/></svg></span><h3>It takes care of itself.</h3><p>Mail sorted, receipts filed, invoices followed up.</p><p class="site-proof">By agents you choose, on terms you set.</p></div>
+      <div class="site-benefit"><span class="sk-icon-tile"><svg class="sk-icon"><use href="#i-shield"/></svg></span><h3>It's yours.</h3><p>Your records stay with you, wherever you run Sektar.</p><p class="site-proof">On your own computer or your own cloud. Take it with you anytime.</p></div>
+      <div class="site-benefit"><span class="sk-icon-tile"><svg class="sk-icon"><use href="#i-pin"/></svg></span><h3>It works where you work.</h3><p>At your desk, on the train, at a client's.</p><p class="site-proof">Offline on your laptop, synced to your phone.</p></div>
+    </div>
+
+    <details class="site-how">
+      <summary>How it works</summary>
+      <div class="site-how__body">
+        <p><b>Your computer, reachable anywhere.</b> Sektar can run on a computer at home. A secure tunnel gives it your own address, and the connection stays encrypted end to end.</p>
+        <p><b>Backups.</b> Encrypted copies go to the cloud every day. For now Sektar holds the key so we can help you restore; holding it yourself comes next.</p>
+        <p><b>AI, your choice.</b> Each agent runs where you say: on your computer, in an EU cloud, or with a frontier model for the tasks that need one.</p>
+        <p><b>A record of every change.</b> Everything you or your agents change is signed and kept, so you can see it and undo it.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============================================================ START: three choices, one sentence each -->
+<section class="site-section site-section--subtle" id="start">
+  <div class="sk-container">
+    <div class="site-head site-head--center">
+      <p class="sk-eyebrow">Get started</p>
+      <h2>Start the way that suits you.</h2>
+    </div>
+    <div class="site-start">
+      <article class="sk-card site-choice">
+        <h3>Free</h3>
+        <p>Install it on your computer, or try the demo in your browser.</p>
+        <span class="sk-btn sk-btn--secondary" aria-disabled="true">At launch</span>
+      </article>
+      <article class="sk-card site-choice is-featured">
+        <span class="sk-badge sk-badge--forest site-choice__badge">Most yours</span>
+        <h3>On your own computer</h3>
+        <p>Everything stays at home. We add access from anywhere, and backups.</p>
+        <button class="sk-btn sk-btn--primary" type="button" data-site-open>Log in</button>
+      </article>
+      <article class="sk-card site-choice">
+        <h3>In the cloud</h3>
+        <p>Always on, nothing to set up. Move home whenever you like.</p>
+        <button class="sk-btn sk-btn--secondary" type="button" data-site-open>Log in</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CLOSING BAND -->
+<section class="site-section site-section--band sk-theme-dark">
+  <img class="site-band__deco" src="assets/shapes/sektar-growth-four-column-combined-dark.svg" alt="">
+  <div class="sk-container">
+    <div class="site-band">
+      <p class="sk-tagline">Smarter every day</p>
+      <h2 class="sk-mt-3">Get your evenings back.</h2>
+      <div class="site-actions">
+        <a class="sk-btn sk-btn--primary sk-btn--lg sk-btn--pill" href="#start">Start for free</a>
+        <button class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" type="button" data-site-open>Log in</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============================================================ FOOTER -->
+<footer class="site-footer">
+  <div class="sk-container site-footer__inner">
+    <span class="sk-lockup" style="--sk-lockup-h:40px"><svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg><svg class="sk-lockup__wordmark"><use href="#sektar-wordmark"/></svg><span class="sk-lockup__tagline">Smarter every day</span></span>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="#week">A week with Sektar</a><a href="#why">Why Sektar</a><a href="#start">Get started</a><a href="#top" data-site-open>Log in</a>
+    </nav>
+    <p class="site-footer__fine">© Sektar. Built on Powerhouse; sign-in by Renown.</p>
+  </div>
+</footer>
+
+<!-- ============================================================ SIGN-IN DIALOG -->
+<dialog class="site-dialog" id="site-login" aria-labelledby="site-login-title">
+  <div class="sk-modal">
+    <button class="sk-btn sk-btn--ghost sk-btn--icon sk-btn--sm site-dialog__close" type="button" aria-label="Close" data-site-close><svg class="sk-icon"><use href="#i-close"/></svg></button>
+
+    <div data-step="start">
+      <h2 class="sk-modal__title" id="site-login-title">Open your Sektar</h2>
+      <p class="sk-modal__body">Sign in with Renown, the identity behind Powerhouse apps. Then we take you to your Sektar, in the cloud or on your own computer.</p>
+      <div class="sk-alert sk-alert--warning" data-site-filewarn hidden><svg class="sk-icon"><use href="#i-info"/></svg><div><div class="sk-alert__title">Serve this page over http(s)</div>Renown can't return to a file:// page. Run <code>python -m http.server</code> in <code>design-system/</code> and open <code>http://localhost:8000/site.html</code>.</div></div>
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Continue with Renown <svg class="sk-icon"><use href="#i-arrow-right"/></svg></button></div>
+      <p class="sk-caption" style="margin:0">Renown asks you to approve this site once. Nothing is paid and no funds move.</p>
+    </div>
+
+    <div data-step="busy" hidden>
+      <h2 class="sk-modal__title">One moment</h2>
+      <p class="site-busy" role="status"><span class="sk-spinner"></span><span data-site-busy-text>Checking your sign-in…</span></p>
+    </div>
+
+    <div data-step="failed" hidden>
+      <h2 class="sk-modal__title">That didn't work</h2>
+      <div class="sk-alert sk-alert--danger" role="alert"><svg class="sk-icon"><use href="#i-info"/></svg><div data-site-fail-text>Renown didn't confirm the sign-in.</div></div>
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-close>Close</button><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Try again</button></div>
+    </div>
+
+    <div data-step="where" hidden>
+      <h2 class="sk-modal__title">Where does your Sektar run?</h2>
+      <div class="site-who"><span class="sk-avatar sk-avatar--forest" data-site-avatar>MV</span><div style="min-width:0"><div class="site-who__name" data-site-name>Signed in</div><div class="site-who__meta" data-site-did></div></div><button class="sk-btn sk-btn--ghost sk-btn--sm" type="button" data-site-signout>Sign out</button></div>
+      <div data-site-known hidden>
+        <p class="sk-eyebrow" style="margin:0 0 var(--sk-space-2)">On this device</p>
+        <ul class="site-envs" data-site-envs></ul>
+      </div>
+      <p class="site-divider" data-site-or hidden>or add another</p>
+      <form class="site-where" data-site-where novalidate>
+        <div class="sk-segmented" role="group" aria-label="Where it runs">
+          <button class="sk-segmented__item" type="button" aria-pressed="true" data-site-kind="portle">My computer</button>
+          <button class="sk-segmented__item" type="button" aria-pressed="false" data-site-kind="vetra">Sektar cloud</button>
+        </div>
+        <div class="sk-field sk-mt-4">
+          <label class="sk-label" for="site-where-input" data-site-where-label>Your address</label>
+          <div class="sk-input-group"><span class="sk-input-group__affix" data-site-prefix>https://app.</span><input id="site-where-input" class="sk-input" autocomplete="url" spellcheck="false" autocapitalize="off" placeholder="marit.studio" data-site-where-input><span class="sk-input-group__affix" data-site-suffix hidden></span></div>
+          <p class="sk-hint" data-site-where-hint>The address you chose when you set up the tunnel, or paste the full link.</p>
+        </div>
+        <p class="site-where__preview" data-site-preview aria-live="polite"></p>
+        <label class="sk-check"><input type="checkbox" checked data-site-remember> Remember on this device</label>
+        <div class="sk-modal__footer sk-mt-4"><button class="sk-btn sk-btn--primary" type="submit">Open my Sektar <svg class="sk-icon"><use href="#i-arrow-right"/></svg></button></div>
+      </form>
+    </div>
+
+    <div data-step="down" hidden>
+      <h2 class="sk-modal__title">Your computer isn't answering</h2>
+      <p class="sk-modal__body"><span data-site-down-host></span> didn't respond. The computer may be asleep, offline or restarting. Your data is safe, and your last backup is in the cloud.</p>
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-back>Back</button><button class="sk-btn sk-btn--secondary" type="button" data-site-anyway>Open anyway</button><button class="sk-btn sk-btn--primary" type="button" data-site-retry>Try again</button></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============================================================ PROTOTYPE NOTES (documentation) -->
+<section class="site-notes" id="notes" aria-labelledby="notes-title">
+  <div class="sk-container">
+    <p class="sk-eyebrow">Prototype notes · not part of the site</p>
+    <h2 id="notes-title">How sign-in and forwarding work</h2>
+    <div class="sk-grid sk-grid--2 sk-grid--6 doc-grid-start">
+      <div>
+        <ol class="sk-steps">
+          <li class="sk-step sk-step--done"><span class="sk-step__dot"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-step__title">This page gets its own key</div><div class="sk-step__desc">An ECDSA P-256 key made with WebCrypto and kept in IndexedDB (<code>sektar-site</code>). Its <code>did:key:zDn…</code> is the app and connect id Renown signs a credential for.</div></div></li>
+          <li class="sk-step sk-step--done"><span class="sk-step__dot"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-step__title">Renown signs in and returns</div><div class="sk-step__desc"><code>www.renown.id/?app=&amp;connect=&amp;network=eip155&amp;chain=1&amp;returnUrl=</code>. It comes back with <code>?user=did:pkh:eip155:1:0x…</code>.</div></div></li>
+          <li class="sk-step sk-step--done"><span class="sk-step__dot"><svg class="sk-icon"><use href="#i-check"/></svg></span><div><div class="sk-step__title">The page checks the credential</div><div class="sk-step__desc"><code>GET /api/auth/credential</code>: it must be issued by that address to this page's DID and not be expired. The EIP-712 signature is recovered with viem (from jsDelivr) and must match the issuer. The profile comes from <code>POST /api/profile</code>.</div></div></li>
+          <li class="sk-step sk-step--current"><span class="sk-step__dot"></span><div><div class="sk-step__title">Find the environment</div><div class="sk-step__desc">In order: <code>?env=</code> in the link, a directory (not built yet, see right), environments remembered on this device, or the address the person types.</div></div></li>
+          <li class="sk-step"><span class="sk-step__dot"></span><div><div class="sk-step__title">Forward</div><div class="sk-step__desc">For a home computer the page first checks the address answers, so a sleeping computer gets a clear message instead of a browser error. Then it navigates. Connect there signs in with Renown again, against its own key; Renown has a session, so that's one approval.</div></div></li>
+        </ol>
+      </div>
+      <div>
+        <table class="sk-table sk-table--compact doc-token-table">
+          <tbody>
+            <tr><th>My computer (Portle)</th><td><code>https://app.&lt;zone&gt;/</code>: a customer zone such as <code>marit.studio</code>, or a shared one, <code>&lt;siteId&gt;.sites.portle.host</code>. TLS ends on the computer; the relay can't decrypt.</td></tr>
+            <tr><th>Sektar cloud (Vetra)</th><td><code>https://connect.&lt;env&gt;.vetra.io/</code>, after the Vetra Cloud docs. The delivery study proposes <code>&lt;name&gt;.sektar.app</code>; change <code>VETRA_URL</code> in <code>js/site.js</code> when it's settled.</td></tr>
+            <tr><th>Directory (missing)</th><td>No API maps a Renown user to their environments yet. Proposed: <code>GET {directory}/v1/environments?owner=did:pkh:…</code> → <code>{environments:[{name, kind, connectUrl}]}</code>, served by Vetra and fed by the Portle plugin. Set <code>DIRECTORY_URL</code> in <code>js/site.js</code> and the page uses it.</td></tr>
+            <tr><th>Not built</th><td>Download, the in-browser demo and prices (all at launch); self-custody of the backup key.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="js/site.js"></script>
+</body>
+</html>

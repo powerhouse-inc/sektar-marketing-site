@@ -1,17 +1,17 @@
-# Fusion boilerplate
+# Sektar marketing site
 
-A starter for Powerhouse web apps ("fusion apps"): a Next.js app that signs
-users in with **Renown** and reads and writes **documents** on a Powerhouse
-switchboard. It uses the **light reactor client**: plain GraphQL, with no
-reactor, PGlite or job queue in the browser bundle.
+The public site for **Sektar** at <https://sektar.io>. It is the Sektar design
+system's site prototype (`sektar-design-elements/design-system/site.html`),
+served by Next.js:
 
-Built on the Powerhouse **6.2.3** train (`@powerhousedao/reactor-browser`,
-`@renown/sdk`, `document-model`, `@powerhousedao/ph-cli`), pinned exactly in
-`package.json`. Bump them together.
+- **The page** is the prototype's markup, rendered verbatim. Its sections are
+  cut out by a sync script, so a design change needs no hand-ported markup.
+- **Sign-in** is Renown, through the Powerhouse SDK (redirect mode).
+- **"Open your Sektar"** forwards the signed-in person to their own Sektar: a
+  home computer through Portle, or a Sektar cloud environment.
 
-The reference implementation lives in the Powerhouse monorepo at
-`test/test-fusion`, where the same integration runs in CI against the latest
-platform code.
+Started from the fusion template (`powerhouse-inc/fusion-boilerplate`), cut
+down to what a public site needs. The site reads no documents.
 
 ## Quick start
 
@@ -19,146 +19,76 @@ Requires Node 24+ and pnpm 10.
 
 ```bash
 pnpm install
-cp .env.example .env.local     # the defaults work locally
-pnpm switchboard               # a local 6.2.3 switchboard on :4001 (own terminal)
-pnpm dev                       # the app on :3000
+cp .env.example .env.local     # defaults are production (renown.id, sektar.io)
+pnpm dev                       # http://localhost:3000
 ```
 
-The local switchboard stores its data in `switchboard/.ph/` and serves the
-Renown package, so it can stand in for Renown's switchboard too.
+Sign-in in development goes to the real Renown portal, which returns to
+localhost.
 
-| Script             | What it does                                                       |
-| ------------------ | ------------------------------------------------------------------ |
-| `pnpm dev`         | Next dev server                                                    |
-| `pnpm switchboard` | Local switchboard on :4001 (`switchboard/powerhouse.config.json`)  |
-| `pnpm build`       | Production build                                                   |
-| `pnpm typecheck`   | `tsc --noEmit`                                                     |
-| `pnpm lint`        | ESLint, including the import rules below                           |
-| `pnpm codegen`     | Typed SDKs for custom subgraphs (see [Custom subgraphs](#custom-subgraphs)) |
-| `pnpm test:e2e`    | Playwright: its own switchboard and dev servers, both login modes  |
+| Script                    | What it does                                                         |
+| ------------------------- | -------------------------------------------------------------------- |
+| `pnpm dev` / `pnpm build` / `pnpm start` | Next.js                                                 |
+| `pnpm sync:design-system` | Re-vendor the design system (see below)                               |
+| `pnpm typecheck`, `pnpm lint` | Checks; lint also forbids importing the reactor                   |
+| `pnpm check:bundle .next redirect` | After a build: no reactor, PGlite or wallet library in the client bundle |
+| `pnpm test:e2e`           | Playwright, with its own switchboard and a fake Renown portal (run `PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install chromium` once) |
 
-## Three URLs
+## The design system
 
-| Variable                             | What it is                                                                         | Default                                       |
-| ------------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------- |
-| `NEXT_PUBLIC_SWITCHBOARD_URL`        | **Your data switchboard**, where your documents live (`<base>/graphql`)           | `http://localhost:4001/graphql`               |
-| `NEXT_PUBLIC_RENOWN_URL`             | The **Renown portal** a redirect sign-in goes to                                   | `https://www.renown.id`                       |
-| `NEXT_PUBLIC_RENOWN_SWITCHBOARD_URL` | **Renown's switchboard**: issues, serves and verifies sign-in credentials          | `https://switchboard.renown.vetra.io/graphql` |
+`pnpm sync:design-system [path/to/design-system]` (default
+`../sektar-design-elements/design-system`) copies, unmodified:
 
-Keep the last two apart from the first. Renown's switchboard is not where your
-app's documents live. All variables are listed in `.env.example`; every
-`NEXT_PUBLIC_*` value is inlined at build time.
+- the shipped CSS layers and `site.css` to `public/sk/css/`. They are served as
+  files, so their `@import`s and font URLs work as in the design system.
+- the assets the page and the CSS refer to, to `public/sk/assets/`.
+- `site.html` to `content/site.html`, plus the parts the page renders:
+  - `content/sections/*.html`: the preamble (skip link and sprites), header,
+    main, footer and the sign-in dialog, with asset paths pointed at `/sk`;
+  - `content/sections/meta.json`: the `<title>` and meta description.
+- `public/sk/css/doc-browser.css`: the hero's browser-frame rules, extracted
+  from the documentation-only `docs.css`.
+- `public/sk/VERSION.json`: the source commit, whether it had uncommitted
+  changes, and a hash per file.
 
-## Signing in: redirect or embedded
+It leaves out the prototype bar, the prototype notes, `docs.css` and
+`js/site.js`. It fails, so a broken page never ships, when a section, the
+sprites or the title is missing, or when the page refers to an asset the
+design system doesn't have.
 
-`NEXT_PUBLIC_RENOWN_LOGIN_MODE` picks one per build:
+Review the diff and commit it. `VERSION.json` tells you which design system the
+site shipped.
 
-- **`redirect`** (default): the user goes to the Renown portal and comes back
-  with `?user=<did>`. It needs no wallet configuration, and next.config.ts swaps
-  the wallet adapters for a stub, so the client bundle carries no wallet
-  library (about 1.6 MB of static assets against 15 MB embedded).
-- **`embedded`**: sign-in happens in-page with the adapters in
-  `lib/renown/wallet-adapters.ts`: Rainbow (browser wallets) and, with
-  `NEXT_PUBLIC_PRIVY_APP_ID`, Privy (email, Google). `NEXT_PUBLIC_RENOWN_MOCK=1`
-  swaps in a headless mock signer for local work and e2e. It signs with a
-  well-known key, and a production build with it set fails.
+## Sign-in and forwarding
 
-Either way, `RenownProvider` (in `app/providers.tsx`) keeps an HttpOnly session
-cookie in sync through `app/api/renown/session`. The cookie is what `proxy.ts`
-checks to gate the app, and what `verifySession()` in `lib/dal.ts` verifies in
-server components and route handlers.
+`components/site-controller.tsx` gives the verbatim markup its behaviour, on the
+prototype's `data-site-*` hooks, steps and copy. It differs from `js/site.js`
+only in the sign-in:
 
-Rules the code already follows:
+- **Sign-in goes through the Renown SDK.** `RenownProvider` in redirect mode
+  holds the site's key, goes to the portal, checks the credential it brings
+  back and keeps the session. The prototype's own key, its REST calls to
+  renown.id and viem from a CDN are gone.
+- **The return lands on `/` with `?user=`.** The dialog reopens at "Where does
+  your Sektar run?". A `?env=<url>` link survives the round trip and opens that
+  environment straight away.
+- **Forwarding is a port of the prototype** (`lib/environments.ts`): typed
+  addresses, environments remembered per Renown user on the device, an optional
+  directory, and a reachability check before navigating.
+- **A session cookie** (`app/api/renown/session`) lets the server render the
+  signed-in header on the first paint (`lib/dal.ts`).
 
-- In redirect mode pass `adapters: undefined`, never `[]`. An empty array still
-  registers the in-page login and suppresses the redirect.
-- Start a redirect sign-in from a public page (`/login`). The portal returns to
-  the page that left. `proxy.ts` keeps `?user=` when it redirects to `/login`,
-  and `?next=` brings the user back to where they were going.
-- After sign-in, navigate once `useRenownSessionSynced()` is true, or the proxy
-  sees no cookie yet and sends the user back to `/login`.
+## Open questions (configuration, not code)
 
-## Documents
+| Question | Setting | Today |
+|---|---|---|
+| Cloud URL pattern | `NEXT_PUBLIC_CLOUD_URL_TEMPLATE` | `https://connect.{name}.vetra.io/` (Vetra Cloud docs); the delivery study proposes `{name}.sektar.app` |
+| Directory of a person's environments | `NEXT_PUBLIC_DIRECTORY_URL` | unset: remembered and typed addresses only |
+| Reachability of cloud environments | `answers()` in `lib/environments.ts` | any HTTP answer counts, so a load balancer's 502 reads as "up"; right for Portle |
 
-Under `GraphQLReactorProvider` the same hooks Connect uses work against the
-data switchboard:
+## Deploying
 
-```tsx
-import {
-  useDispatch,
-  useDocumentSafe,
-  useSwitchboardClient,
-} from "@powerhousedao/reactor-browser/graphql-client";
-import { setName } from "document-model";
-
-const doc = useDocumentSafe(id); // { status, data, error }; stays in sync live
-const [, dispatch] = useDispatch(doc.data);
-dispatch(setName("New name")); // signed by the Renown user when signed in
-```
-
-- **Reads**: `useDocumentSafe(id)` (non-suspending) or `useDocument(id)`
-  (Suspense). Lists the hooks don't cover go through `client.request(query)` on
-  the reactor's own `/graphql`, e.g. `findDocuments` in
-  `lib/reactor/use-drives.ts`. In 6.2.3 the client has no `find` of its own.
-- **Writes**: `useDispatch` or `client.execute`. Writes go to the switchboard
-  first; there is no optimistic or offline state.
-- **Realtime**: the hooks update themselves; for your own lists,
-  `useDocumentChanges(types, onChange)` in `lib/reactor/use-document-changes.ts`.
-- **Client-only**: the client exists in the browser only, so views that read
-  documents render inside `<ClientOnly>`. Some 6.2.3 hooks cannot run during
-  server rendering. Use `verifySession()` for server-side auth, and the
-  switchboard's GraphQL directly if you need server-side data.
-- **Document models**: optional. Without them the switchboard runs the reducer
-  and actions are plain data (`setName` above is a base action every model
-  accepts). Register your models in `DOCUMENT_MODELS` in `app/providers.tsx` to
-  get typed action creators and `useDocumentModelModuleById`. A batch of two or
-  more actions needs its model, or the client refuses to sign it. Import a
-  package's **`document-models` subpath**, never its root, which also carries
-  server-side processor code.
-
-## Custom subgraphs
-
-Your package's subgraphs are served next to the reactor at
-`<base>/graphql/<name>`. To call one with types:
-
-1. Add its name to `SUBGRAPHS` in `codegen.ts`, and its operations to
-   `lib/graphql/documents/<name>.graphql`.
-2. With the switchboard running, `pnpm codegen` (it introspects
-   `PH_SWITCHBOARD_URL`) writes `lib/graphql/gen/<name>.ts`. Commit it.
-3. `useSubgraphSdk("<name>", getSdk)` from `lib/graphql/subgraph.ts` binds it to
-   the light client, which derives the URL and adds the bearer token.
-
-## Switchboard requirements
-
-- The same train as the client (6.2.3). An older switchboard fails on fields
-  the client asks for.
-- Leave `AUTH_ENABLED` **unset**. It selects an admin-only policy that refuses
-  every non-admin user.
-- For reads that depend on who is signed in, run with
-  `RESOLVE_CALLER_IDENTITY=true`, and use document policies to decide access.
-
-## Bundling rules
-
-`pnpm lint` enforces them:
-
-- Import `@powerhousedao/reactor-browser/graphql-client` and `/renown`, never
-  the package root. The root reaches the reactor (`pg`, PGlite,
-  `node:worker_threads`), and Turbopack fails on it.
-- Never import `@powerhousedao/reactor` in app code.
-
-The embedded build stubs `@x402/*` (optional Coinbase packages reached through
-the wallet libraries; see `next.config.ts`).
-
-## Tests
-
-`pnpm test:e2e` starts its own switchboard (`e2e/switchboard`, port 4801) and a
-dev server per login mode (3120 redirect, 3121 embedded), separate from your dev
-stack. The redirect specs replace the Renown portal with a fake origin that
-signs and stores a real delegation credential (`e2e/support`).
-Run `pnpm exec playwright install chromium` once first.
-
-## Not here yet
-
-Profile editing through the user's Renown profile document. It waits on
-platform work that gives profile documents an owner and a reconciled set of
-official values.
+`pnpm build && pnpm start` runs the site. It needs `content/` and `public/` at
+runtime, because the page reads its sections from `content/sections/`. The page
+renders per request (it reads the session cookie); robots and the sitemap are
+static. Set `NEXT_PUBLIC_SITE_URL` to the public origin.

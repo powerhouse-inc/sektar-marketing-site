@@ -1,0 +1,54 @@
+<dialog class="site-dialog" id="site-login" aria-labelledby="site-login-title">
+  <div class="sk-modal">
+    <button class="sk-btn sk-btn--ghost sk-btn--icon sk-btn--sm site-dialog__close" type="button" aria-label="Close" data-site-close><svg class="sk-icon"><use href="#i-close"/></svg></button>
+
+    <div data-step="start">
+      <h2 class="sk-modal__title" id="site-login-title">Open your Sektar</h2>
+      <p class="sk-modal__body">Sign in with Renown, the identity behind Powerhouse apps. Then we take you to your Sektar, in the cloud or on your own computer.</p>
+      
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Continue with Renown <svg class="sk-icon"><use href="#i-arrow-right"/></svg></button></div>
+      <p class="sk-caption" style="margin:0">Renown asks you to approve this site once. Nothing is paid and no funds move.</p>
+    </div>
+
+    <div data-step="busy" hidden>
+      <h2 class="sk-modal__title">One moment</h2>
+      <p class="site-busy" role="status"><span class="sk-spinner"></span><span data-site-busy-text>Checking your sign-in…</span></p>
+    </div>
+
+    <div data-step="failed" hidden>
+      <h2 class="sk-modal__title">That didn't work</h2>
+      <div class="sk-alert sk-alert--danger" role="alert"><svg class="sk-icon"><use href="#i-info"/></svg><div data-site-fail-text>Renown didn't confirm the sign-in.</div></div>
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-close>Close</button><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Try again</button></div>
+    </div>
+
+    <div data-step="where" hidden>
+      <h2 class="sk-modal__title">Where does your Sektar run?</h2>
+      <div class="site-who"><span class="sk-avatar sk-avatar--forest" data-site-avatar>MV</span><div style="min-width:0"><div class="site-who__name" data-site-name>Signed in</div><div class="site-who__meta" data-site-did></div></div><button class="sk-btn sk-btn--ghost sk-btn--sm" type="button" data-site-signout>Sign out</button></div>
+      <div data-site-known hidden>
+        <p class="sk-eyebrow" style="margin:0 0 var(--sk-space-2)">On this device</p>
+        <ul class="site-envs" data-site-envs></ul>
+      </div>
+      <p class="site-divider" data-site-or hidden>or add another</p>
+      <form class="site-where" data-site-where novalidate>
+        <div class="sk-segmented" role="group" aria-label="Where it runs">
+          <button class="sk-segmented__item" type="button" aria-pressed="true" data-site-kind="portle">My computer</button>
+          <button class="sk-segmented__item" type="button" aria-pressed="false" data-site-kind="vetra">Sektar cloud</button>
+        </div>
+        <div class="sk-field sk-mt-4">
+          <label class="sk-label" for="site-where-input" data-site-where-label>Your address</label>
+          <div class="sk-input-group"><span class="sk-input-group__affix" data-site-prefix>https://app.</span><input id="site-where-input" class="sk-input" autocomplete="url" spellcheck="false" autocapitalize="off" placeholder="marit.studio" data-site-where-input><span class="sk-input-group__affix" data-site-suffix hidden></span></div>
+          <p class="sk-hint" data-site-where-hint>The address you chose when you set up the tunnel, or paste the full link.</p>
+        </div>
+        <p class="site-where__preview" data-site-preview aria-live="polite"></p>
+        <label class="sk-check"><input type="checkbox" checked data-site-remember> Remember on this device</label>
+        <div class="sk-modal__footer sk-mt-4"><button class="sk-btn sk-btn--primary" type="submit">Open my Sektar <svg class="sk-icon"><use href="#i-arrow-right"/></svg></button></div>
+      </form>
+    </div>
+
+    <div data-step="down" hidden>
+      <h2 class="sk-modal__title">Your computer isn't answering</h2>
+      <p class="sk-modal__body"><span data-site-down-host></span> didn't respond. The computer may be asleep, offline or restarting. Your data is safe, and your last backup is in the cloud.</p>
+      <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-back>Back</button><button class="sk-btn sk-btn--secondary" type="button" data-site-anyway>Open anyway</button><button class="sk-btn sk-btn--primary" type="button" data-site-retry>Try again</button></div>
+    </div>
+  </div>
+</dialog>

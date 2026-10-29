@@ -8,35 +8,28 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Powerhouse rules for this app
+# Rules for this site
 
-See README.md for the full picture. The rules that break builds or sign-in
+See README.md for the full picture. The rules that break the page or sign-in
 when ignored:
 
-- **Subpath imports only.** `@powerhousedao/reactor-browser/graphql-client` and
-  `@powerhousedao/reactor-browser/renown`, never the package root (it pulls the
-  reactor, pg and PGlite into the browser bundle). Never `@powerhousedao/reactor`.
-  Document models come from a package's `document-models` subpath. ESLint
-  enforces the first two.
-- **Redirect mode is `adapters: undefined`, never `[]`.** next.config.ts aliases
-  `@/lib/renown/wallet-adapters` to `wallet-adapters.redirect.ts` in redirect
-  mode; keep both files exporting `WALLET_ADAPTERS`.
-- **Three URLs.** Data switchboard (`SWITCHBOARD_URL`), Renown portal
-  (`RENOWN_URL`), Renown's switchboard (`RENOWN_SWITCHBOARD_URL`), all in
-  `lib/config.ts`. Do not point Renown at the data switchboard or vice versa,
-  except locally where one switchboard plays both.
-- **Document reads are client-only.** Render views that use `useDocument*`,
-  `useSwitchboardClient` or `useDrives` inside `<ClientOnly>`. In 6.2.3 some of
-  these hooks fail during server rendering, and the page answers 500.
-- **6.2.3 client surface:** `get`, `getOperations`, `create`, `execute`,
-  `deleteDocument`, `subscribe`, `subgraph`, `request`. There is no `find` and
-  no `read.drives`; list documents with `client.request` and `findDocuments`.
-- **Server-side auth** goes through `verifySession()` (`lib/dal.ts`); `proxy.ts`
-  is a fast gate, not the authoritative check.
-- **`NEXT_PUBLIC_RENOWN_APP_NAME`** is also Renown's storage namespace;
-  `lib/reactor/token.ts` reads the persisted user under it. Change both or
-  neither.
-- **Verify** with `pnpm typecheck`, `pnpm lint` and `pnpm test:e2e` (it brings
-  its own switchboard). After changing next.config.ts or the login mode,
-  `pnpm build` both modes:
-  `NEXT_PUBLIC_RENOWN_LOGIN_MODE=embedded pnpm build`.
+- **Never edit the vendored design system.** `public/sk/` and `content/` are
+  written by `pnpm sync:design-system`. A design change goes into
+  `sektar-design-elements/design-system`, then gets synced. Site-only styling
+  belongs in the design system's `site.css`, not here.
+- **The page markup is the prototype's.** `components/site-controller.tsx` binds
+  to its `data-site-*` hooks. A renamed hook in `site.html` needs the same
+  rename there, and the e2e suite catches a miss.
+- **Sign-in is the SDK, in redirect mode.** Keep `adapters` undefined (never
+  `[]`, which suppresses the redirect). Keep the Renown buttons disabled until
+  `useRenown()` exists; before that, `login()` falls back to the default
+  portal with no identity for the site.
+- **On the return from Renown, wait for a definite answer:** a user, or status
+  `not-authorized`. The SDK briefly reports no session while it checks.
+- **Subpath imports only:** `@powerhousedao/reactor-browser/renown`, never the
+  package root or `@powerhousedao/reactor` (ESLint enforces it).
+- **`NEXT_PUBLIC_RENOWN_APP_NAME` is final.** It namespaces Renown's storage;
+  changing it signs every visitor out.
+- **Verify** with `pnpm typecheck`, `pnpm lint`, `pnpm build`,
+  `pnpm check:bundle .next redirect` and `pnpm test:e2e`. On this kind of
+  machine, install Playwright browsers with `PLAYWRIGHT_SKIP_BROWSER_GC=1`.

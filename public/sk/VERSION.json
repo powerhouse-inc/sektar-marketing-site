@@ -1,0 +1,30 @@
+{
+  "source": "sektar-design-elements/design-system",
+  "commit": "d4e707c",
+  "dirty": true,
+  "syncedAt": "2026-10-29T10:02:45.894Z",
+  "files": {
+    "public/sk/css/sektar.css": "144ff1349e507863",
+    "public/sk/css/fonts.css": "12ebc4eb34125ddd",
+    "public/sk/css/tokens.css": "1030397b1c06addb",
+    "public/sk/css/base.css": "5438f58fac36d2e0",
+    "public/sk/css/components.css": "adee2e2e273ac890",
+    "public/sk/css/utilities.css": "a28db77c9edc7c9b",
+    "public/sk/css/site.css": "626b2130f8ce243a",
+    "content/site.html": "8989d1279a38096b",
+    "public/sk/assets/favicon.svg": "646b76398830692a",
+    "public/sk/assets/icons.svg": "c27b6a6d50452ba0",
+    "public/sk/assets/marks.svg": "e23cd285c2e660d7",
+    "public/sk/assets/logos/sektar-logo-horizontal-light.svg": "ff6f7d30cbeac0ce",
+    "public/sk/assets/logos/sektar-logo-horizontal-dark.svg": "2f6d1d17741c44f3",
+    "public/sk/assets/photos/laptop-workspace-with-coffee.jpg": "c7a130b3692cb4c5",
+    "public/sk/assets/shapes/sektar-growth-four-column-combined-dark.svg": "bfd1aee3b3f22e44",
+    "public/sk/assets/fonts/Fraunces[SOFT,WONK,opsz,wght].ttf": "0776a870a0856b29",
+    "public/sk/assets/fonts/Fraunces-Italic[SOFT,WONK,opsz,wght].ttf": "8a7191f26ca546c3",
+    "public/sk/assets/shapes/sektar-pattern-repeat-light.svg": "8ddd805ae1ee1640",
+    "public/sk/assets/shapes/sektar-growth-four-column-combined-light.svg": "b6ae617e1a046809",
+    "public/sk/assets/shapes/sektar-pattern-repeat-dark.svg": "311f1ee16ffd51f0",
+    "public/sk/assets/fonts/OFL.txt": "bdf4c22802eaf804",
+    "public/sk/css/doc-browser.css": "extracted"
+  }
+}

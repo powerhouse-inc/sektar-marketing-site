@@ -1,0 +1,25 @@
+/* =============================================================================
+   Sektar Design System — fonts
+   Fraunces is self-hosted. The Google Fonts build ships Fraunces with its WONK
+   axis pinned, so the "wonky" alternates (leaning n/m/u, odd a) are always on and
+   `font-variation-settings: "WONK" 0` has no effect. The upstream variable font
+   (OFL 1.1, see assets/fonts/OFL.txt) exposes opsz, wght, SOFT and WONK, and the
+   system pins WONK to 0 everywhere for the regular letterforms.
+   Inter is loaded from Google Fonts (see the <link> in the quick start).
+   ============================================================================= */
+@font-face {
+  font-family: "Fraunces";
+  src: url("../assets/fonts/Fraunces[SOFT,WONK,opsz,wght].ttf") format("truetype-variations"),
+       url("../assets/fonts/Fraunces[SOFT,WONK,opsz,wght].ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../assets/fonts/Fraunces-Italic[SOFT,WONK,opsz,wght].ttf") format("truetype-variations"),
+       url("../assets/fonts/Fraunces-Italic[SOFT,WONK,opsz,wght].ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}

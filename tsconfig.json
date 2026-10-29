@@ -42,7 +42,9 @@
     ".next-check-redirect/types/**/*.ts",
     ".next-check-redirect/dev/types/**/*.ts",
     ".next-check-embedded/types/**/*.ts",
-    ".next-check-embedded/dev/types/**/*.ts"
+    ".next-check-embedded/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

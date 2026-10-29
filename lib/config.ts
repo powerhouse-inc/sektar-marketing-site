@@ -15,7 +15,7 @@ export const RENOWN_LOGIN_MODE: RenownLoginMode =
 /* The app's Renown name. It also namespaces Renown's localStorage keys, so
    changing it signs every user out. */
 export const RENOWN_APP_NAME =
-  process.env.NEXT_PUBLIC_RENOWN_APP_NAME ?? "fusion-app";
+  process.env.NEXT_PUBLIC_RENOWN_APP_NAME ?? "sektar-site";
 
 /* Chain the credentials are issued on. It is part of the user's DID
    (`did:pkh:eip155:<chainId>:<address>`), so keep the wallet adapters on it. */
@@ -29,12 +29,29 @@ export const RENOWN_URL =
 
 /* Renown's own switchboard: issues credentials on an embedded sign-in, serves
    them for a redirect sign-in, and verifies sessions server-side (dal.ts).
-   Not the data switchboard below. */
+   Sektar itself runs elsewhere
+   (see the environment templates below); this site reads no documents. */
 export const RENOWN_SWITCHBOARD_URL =
   process.env.NEXT_PUBLIC_RENOWN_SWITCHBOARD_URL ??
   "https://switchboard.renown.vetra.io/graphql";
 
-/* The switchboard the app's documents live on (`<base>/graphql`). Custom
-   subgraphs are served next to it at `<base>/graphql/<name>`. */
-export const SWITCHBOARD_URL =
-  process.env.NEXT_PUBLIC_SWITCHBOARD_URL ?? "http://localhost:4001/graphql";
+/* ---------------------------------------------------------------- the site */
+
+/* The public origin, for metadata, robots and the sitemap. */
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sektar.io";
+
+/* Where a home computer is published through Portle, from its zone:
+   `{zone}` is replaced, e.g. marit.studio -> https://app.marit.studio/. */
+export const PORTLE_URL_TEMPLATE =
+  process.env.NEXT_PUBLIC_PORTLE_URL_TEMPLATE ?? "https://app.{zone}/";
+
+/* Where a Sektar cloud environment lives, from its name: `{name}` is replaced.
+   Open question: connect.<env>.vetra.io (the Vetra Cloud docs) or
+   <name>.sektar.app (the delivery study). */
+export const CLOUD_URL_TEMPLATE =
+  process.env.NEXT_PUBLIC_CLOUD_URL_TEMPLATE ?? "https://connect.{name}.vetra.io/";
+
+/* A directory that lists a person's environments
+   (`GET {url}/v1/environments?owner=did:pkh:…`). Not built yet: unset means
+   the dialog offers remembered and typed addresses only. */
+export const DIRECTORY_URL = process.env.NEXT_PUBLIC_DIRECTORY_URL || null;

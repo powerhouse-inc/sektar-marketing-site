@@ -28,12 +28,8 @@ jobs:
       - run: pnpm lint
 
   build:
-    name: Build (${{ matrix.mode }})
+    name: Build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: [redirect, embedded]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -43,10 +39,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-        env:
-          NEXT_PUBLIC_RENOWN_LOGIN_MODE: ${{ matrix.mode }}
-      # No reactor or PGlite in either bundle; no wallet library in redirect's.
-      - run: pnpm check:bundle .next ${{ matrix.mode }}
+      # No reactor, PGlite or wallet library in the client bundle.
+      - run: pnpm check:bundle .next redirect
+      # Only the shipped design-system layers are vendored, never the docs styles.
+      - run: test -z "$(ls public/sk/css | grep '^docs')"
 
   e2e:
     name: E2E
