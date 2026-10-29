@@ -29,8 +29,9 @@ ARG NEXT_PUBLIC_RENOWN_URL=https://www.renown.id
 ARG NEXT_PUBLIC_RENOWN_SWITCHBOARD_URL=https://switchboard.renown.vetra.io/graphql
 ARG NEXT_PUBLIC_RENOWN_CHAIN_ID=1
 ARG NEXT_PUBLIC_PORTLE_URL_TEMPLATE=https://app.{zone}/
-ARG NEXT_PUBLIC_CLOUD_URL_TEMPLATE=https://connect.{name}.vetra.io/
-ARG NEXT_PUBLIC_DIRECTORY_URL=
+ARG NEXT_PUBLIC_CLOUD_URL_TEMPLATE=https://{name}.vetra.io/
+ARG NEXT_PUBLIC_DIRECTORY_URL=https://switchboard.vetra.io/api/@powerhousedao/vetra-cloud-package/apps/directory
+ARG NEXT_PUBLIC_DIRECTORY_APP=43622402-be06-435a-bbfa-bb649b0d6244
 
 COPY . .
 RUN pnpm build \

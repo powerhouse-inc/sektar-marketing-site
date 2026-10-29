@@ -72,6 +72,7 @@ export function SiteController() {
   const auth = useRenownAuthAsync();
   const renown = useRenown();
   const authRef = useRef(auth);
+  const renownRef = useRef(renown);
   const api = useRef<{
     paint: (user: User | null) => void;
     open: () => void;
@@ -88,6 +89,7 @@ export function SiteController() {
 
   useEffect(() => {
     authRef.current = auth;
+    renownRef.current = renown;
   });
 
   /* ---------------------------------------------------------- bind once */
@@ -227,6 +229,15 @@ export function SiteController() {
       return li;
     }
 
+    /** A short-lived Renown bearer for the directory; null when there is none. */
+    async function directoryBearer(): Promise<string | null> {
+      try {
+        return (await renownRef.current?.getBearerToken({ expiresIn: 300 })) ?? null;
+      } catch {
+        return null;
+      }
+    }
+
     function showWhere(user: User) {
       paint(user);
       step("where");
@@ -237,7 +248,8 @@ export function SiteController() {
       $("[data-site-or]").hidden = envs.length === 0;
       for (const env of envs) list.appendChild(envRow(user, env));
       paintKind();
-      void fromDirectory(user.did).then((found) => {
+      void directoryBearer().then(async (bearer) => {
+        const found = await fromDirectory(user.did, bearer);
         const have = envs.map((e) => e.url);
         for (const env of found) {
           if (!have.includes(env.url)) {

@@ -45,13 +45,17 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sektar.io";
 export const PORTLE_URL_TEMPLATE =
   process.env.NEXT_PUBLIC_PORTLE_URL_TEMPLATE ?? "https://app.{zone}/";
 
-/* Where a Sektar cloud environment lives, from its name: `{name}` is replaced.
-   Open question: connect.<env>.vetra.io (the Vetra Cloud docs) or
-   <name>.sektar.app (the delivery study). */
+/* Where a Sektar cloud environment typed by name lives: `{name}` is its Vetra
+   subdomain. A Sektar host is the environment's only service, so Vetra serves
+   it at the apex. The directory (below) spares most people the typing. */
 export const CLOUD_URL_TEMPLATE =
-  process.env.NEXT_PUBLIC_CLOUD_URL_TEMPLATE ?? "https://connect.{name}.vetra.io/";
+  process.env.NEXT_PUBLIC_CLOUD_URL_TEMPLATE ?? "https://{name}.vetra.io/";
 
-/* A directory that lists a person's environments
-   (`GET {url}/v1/environments?owner=did:pkh:…`). Not built yet: unset means
-   the dialog offers remembered and typed addresses only. */
+/* The directory that lists the signed-in person's Sektar environments:
+   Vetra's (`GET {url}/v1/environments?app=<id>`, with the Renown bearer).
+   Empty means the dialog offers remembered and typed addresses only. */
 export const DIRECTORY_URL = process.env.NEXT_PUBLIC_DIRECTORY_URL || null;
+
+/* Sektar's App on Vetra: the directory lists environments that run it. */
+export const DIRECTORY_APP =
+  process.env.NEXT_PUBLIC_DIRECTORY_APP ?? "43622402-be06-435a-bbfa-bb649b0d6244";

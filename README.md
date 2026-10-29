@@ -82,8 +82,8 @@ only in the sign-in:
 
 | Question | Setting | Today |
 |---|---|---|
-| Cloud URL pattern | `NEXT_PUBLIC_CLOUD_URL_TEMPLATE` | `https://connect.{name}.vetra.io/` (Vetra Cloud docs); the delivery study proposes `{name}.sektar.app` |
-| Directory of a person's environments | `NEXT_PUBLIC_DIRECTORY_URL` | unset: remembered and typed addresses only |
+| Cloud URL pattern | `NEXT_PUBLIC_CLOUD_URL_TEMPLATE` | `https://{name}.vetra.io/`: a typed Vetra subdomain; a Sektar host is served at its environment's apex |
+| Directory of a person's environments | `NEXT_PUBLIC_DIRECTORY_URL`, `NEXT_PUBLIC_DIRECTORY_APP` | Vetra's directory (`…/vetra-cloud-package/apps/directory`), asked with the person's Renown bearer for the environments running Sektar's App; empty: remembered and typed addresses only |
 | Reachability of cloud environments | `answers()` in `lib/environments.ts` | any HTTP answer counts, so a load balancer's 502 reads as "up"; right for Portle |
 
 ## Deploying
