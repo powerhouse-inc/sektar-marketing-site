@@ -4,6 +4,7 @@
 
 import {
   CLOUD_URL_TEMPLATE,
+  DIRECTORY_APP,
   DIRECTORY_URL,
   PORTLE_URL_TEMPLATE,
 } from "@/lib/config";
@@ -119,13 +120,19 @@ export function forget(did: string, url: string) {
   write(STORE_ENVS, all);
 }
 
-/** The person's environments from the directory; none until DIRECTORY_URL is set. */
-export async function fromDirectory(did: string): Promise<Environment[]> {
-  if (!DIRECTORY_URL) return [];
+/**
+ * The person's environments from the directory; none until DIRECTORY_URL is
+ * set or without a bearer. The directory answers for the bearer's holder only,
+ * so `did` is a hint, not a lookup.
+ */
+export async function fromDirectory(did: string, bearer: string | null): Promise<Environment[]> {
+  if (!DIRECTORY_URL || !bearer) return [];
   try {
-    const response = await fetch(
-      `${DIRECTORY_URL.replace(/\/+$/, "")}/v1/environments?owner=${encodeURIComponent(did)}`,
-    );
+    const query = new URLSearchParams({ app: DIRECTORY_APP, owner: did });
+    const response = await fetch(`${DIRECTORY_URL.replace(/\/+$/, "")}/v1/environments?${query}`, {
+      headers: { authorization: `Bearer ${bearer}` },
+      cache: "no-store",
+    });
     if (!response.ok) return [];
     const body = (await response.json()) as {
       environments?: { connectUrl: string; kind: EnvKind; name: string }[];
