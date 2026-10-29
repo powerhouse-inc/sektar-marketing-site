@@ -37,8 +37,11 @@ const x402Stubs = Object.fromEntries(
 );
 
 const nextConfig: NextConfig = {
-  // Lets a second dev server (the embedded-mode e2e) run beside the default one.
+  // Lets a second dev server (the e2e one) run beside the default one.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  // A self-contained server for the Docker image (.next/standalone); `next
+  // start` is unaffected.
+  output: "standalone",
   turbopack: {
     resolveAlias: redirectMode
       ? {
