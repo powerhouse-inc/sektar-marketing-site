@@ -88,7 +88,26 @@ only in the sign-in:
 
 ## Deploying
 
-`pnpm build && pnpm start` runs the site. It needs `content/` and `public/` at
-runtime, because the page reads its sections from `content/sections/`. The page
-renders per request (it reads the session cookie); robots and the sitemap are
-static. Set `NEXT_PUBLIC_SITE_URL` to the public origin.
+The page renders per request (it reads the session cookie), so the site needs a
+Node server, not static hosting. Robots and the sitemap are static.
+
+### Docker
+
+```bash
+docker build -t sektar-marketing-site .
+docker run --rm -p 3000:3000 sektar-marketing-site
+```
+
+- The image is Next.js standalone output on `node:24-slim`, about 390 MB. It
+  runs as the `node` user and includes a health check on `/robots.txt`.
+- `NEXT_PUBLIC_*` settings are inlined at build time, so pass them as
+  `--build-arg` (e.g. `--build-arg NEXT_PUBLIC_CLOUD_URL_TEMPLATE=https://{name}.sektar.app/`),
+  not at `docker run`. The defaults are production.
+- The build runs the bundle check and fails if reactor, PGlite or wallet code
+  reaches the client.
+- The server listens on `PORT` (default 3000).
+
+### Without Docker
+
+`pnpm build && pnpm start`. The server needs `content/` and `public/` next to it
+at runtime, because the page reads its sections from `content/sections/`.
