@@ -94,19 +94,22 @@ test("builds the address from what the person types", async ({ page }) => {
     "Opens https://app.marit.studio/",
   );
 
-  // Sektar cloud: the prefix and suffix come from the cloud URL template.
+  // Sektar cloud: the prefix and suffix come from the cloud URL template (a
+  // Sektar host is served at its environment's apex, https://{name}.vetra.io/).
   await dialog(page).getByRole("button", { name: "Sektar cloud" }).click();
-  await expect(dialog(page).locator("[data-site-prefix]")).toHaveText("https://connect.");
+  await expect(dialog(page).locator("[data-site-prefix]")).toHaveText("https://");
   await expect(dialog(page).locator("[data-site-suffix]")).toHaveText(".vetra.io");
   await dialog(page).getByLabel("Environment name").fill("marit");
   await expect(dialog(page).locator("[data-site-preview]")).toHaveText(
-    "Opens https://connect.marit.vetra.io/",
+    "Opens https://marit.vetra.io/",
   );
 
   // Not a name: the field says what it wants, and nothing opens.
   await dialog(page).getByLabel("Environment name").fill("not a name!");
   await dialog(page).getByRole("button", { name: "Open my Sektar" }).click();
-  await expect(dialog(page).locator(".sk-field")).toHaveClass(/sk-field--error/);
+  // The dialog also has the invite code's field: the address input's own.
+  const field = dialog(page).locator(".sk-field", { has: page.locator("[data-site-where-input]") });
+  await expect(field).toHaveClass(/sk-field--error/);
   await expect(dialog(page).locator("[data-site-where-hint]")).toContainText("letters, digits and dashes");
 });
 
