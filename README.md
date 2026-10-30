@@ -92,6 +92,25 @@ only in the sign-in:
 - **A session cookie** (`app/api/renown/session`) lets the server render the
   signed-in header on the first paint (`lib/dal.ts`).
 
+## Google sign-in relay for cloud environments
+
+Sektar cloud environments each have their own host, but Google only accepts
+redirect URIs registered in advance. This site is the one registered URI of the
+publisher's Google web client (`sektar-google`), and it keeps that client's
+secret so the environments never hold it. Design:
+`sektar/docs/superpowers/specs/2026-10-30-cloud-oauth-relay-design.md`.
+
+| Route | What it does |
+|---|---|
+| `GET /api/oauth/callback` | Google's redirect. Reads the environment's callback from `state` (`<random>.<base64url(url)>`), checks it (https, `…/oauth/callback`, a `*.vetra.io` host or one Vetra's `vetraEnvironmentHostKnown` confirms) and sends the browser on with everything Google sent. Anything else: a failure page, never a redirect. |
+| `POST /api/oauth/token` | The token endpoint relayed sign-ins use: form-encoded `authorization_code` (with `code_verifier` and the relay's `redirect_uri`) or `refresh_token`, forwarded to Google with the client secret; Google's answer comes back unchanged. Nothing is stored or logged. |
+| `GET /api/oauth/hosts/<host>` | `{ "accepted": bool }`: whether the relay sends sign-ins to that host. A Sektar host asks once at start and signs in through the relay only on a yes. |
+
+Settings (server only): `SEKTAR_GOOGLE_CLIENT_ID` / `SEKTAR_GOOGLE_CLIENT_SECRET`
+(from OpenBao `kv/powerhouse/shared/sektar-google-oauth`), `OAUTH_RELAY_HOST_SUFFIXES`,
+`OAUTH_RELAY_LOOKUP_URL`; see `.env.example`. The logic is in `lib/oauth-relay.ts`
+and `lib/oauth-broker.ts`, tested with `pnpm test`.
+
 ## Open questions (configuration, not code)
 
 | Question | Setting | Today |
