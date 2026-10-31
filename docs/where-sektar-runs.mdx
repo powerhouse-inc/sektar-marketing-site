@@ -1,0 +1,75 @@
+{/*
+  Checked on 2026-10-31 against sektar at 6ec66e6 and the v1.0.2 release.
+  Read from the code, not run. The table's rows come from:
+  - hosts/desktop/host.js, hosts/cli/host.js, hosts/cli/README.md
+  - .github/workflows/desktop.yml; the release's assets
+  The rules for signing in and identity are in docs/GAPS.md until the
+  Configuring Renown sections are written.
+  Where this page and the product disagree: docs/GAPS.md.
+*/}
+
+# Where Sektar runs
+
+You can run Sektar in three ways. They differ in who keeps it running and where your documents are.
+
+Sektar Cloud and Self-hosted Sektar are the same software. The only difference is who runs it: we do, or you do. The Sektar Desktop App is built differently: it keeps everything on your computer, and you use it on that computer.
+
+Each one is a separate Sektar. Documents don't sync between them.
+
+|  | Sektar Desktop App [Download](/download) | Sektar Cloud [Open my Sektar](/login?want=vetra) | Self-hosted Sektar [Set it up](#self-hosted-sektar) |
+| --- | --- | --- | --- |
+| What it is | An app you install on your computer | Your own Sektar, hosted for you on Vetra | Sektar in containers, on a server you run |
+| How you start | Download the installer for macOS (Apple silicon), Windows or Linux (.deb) | Sign in with Renown and enter an invite code | Build the image from the [source code](https://github.com/powerhouse-inc/sektar) and start it with Docker Compose |
+| Without internet | Your documents stay available. Connected accounts wait until you're back online | Not available | You can't sign in |
+
+Connected accounts on Sektar Cloud aren't fully working yet: a new environment can sign in to Google and read from it, but can't save what it reads.
+
+The downloaded Desktop App doesn't include Sektar's Google sign-in yet, so it can't connect Gmail or Google Calendar.
+
+Google hasn't verified Sektar's app yet, so only accounts on our test list can connect Gmail or Google Calendar.
+
+To try Sektar first, use the free option on the [home page](/#start). It runs in a browser tab and keeps your documents in that browser.
+
+## Sektar Desktop App
+
+<Placeholder>What to install, where your documents are kept, and how to update.</Placeholder>
+
+### Configuring Portle
+
+<Placeholder>Reaching your Sektar from your other devices through a Portle tunnel.</Placeholder>
+
+### Configuring Backups
+
+<Placeholder>What to back up, and keeping encrypted copies in the cloud.</Placeholder>
+
+### Configuring Renown
+
+<Placeholder>Signing in when Sektar starts, who the admin is, what changing identity does to your documents, and choosing a Renown instance.</Placeholder>
+
+### Configuring Integrations
+
+<Placeholder>Connecting Gmail, Google Calendar and other accounts, and setting up the AI agent.</Placeholder>
+
+## Sektar Cloud
+
+<Placeholder>How to get an invite code, your address, and what happens when a licence ends.</Placeholder>
+
+## Self-hosted Sektar
+
+<Placeholder>What you need, the settings it takes, and how to update and move your data.</Placeholder>
+
+### Configuring Portle
+
+<Placeholder>Reaching your server from your other devices through a Portle tunnel.</Placeholder>
+
+### Configuring Backups
+
+<Placeholder>What to back up: the database and the data volume.</Placeholder>
+
+### Configuring Renown
+
+<Placeholder>Signing in when Sektar starts, who the admin is, what changing identity does to your documents, and choosing or running a Renown instance.</Placeholder>
+
+### Configuring Integrations
+
+<Placeholder>Setting up your own Google client, connecting accounts, and setting up the AI agent.</Placeholder>

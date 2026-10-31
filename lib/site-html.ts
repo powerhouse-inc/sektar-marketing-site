@@ -10,10 +10,10 @@ import { cache } from "react";
  * markup to drift; the sync fails when a section goes missing.
  *
  * Left out by the sync: the prototype bar, the prototype notes and js/site.js.
- * The sign-in and forwarding behaviour lives in components/site-controller.tsx,
+ * The sign-in and forwarding behaviour lives in components/login-controller.tsx,
  * on the Renown SDK.
  */
-const SECTIONS = ["preamble", "header", "main", "footer", "dialog"] as const;
+const SECTIONS = ["preamble", "header", "main", "footer", "login"] as const;
 
 export type SiteHtml = Record<(typeof SECTIONS)[number], string>;
 
@@ -26,6 +26,12 @@ export const loadSiteHtml = cache(
       ]),
     ) as SiteHtml,
 );
+
+/** A section as it reads away from the home page: its `#week` links go to the
+    home page's sections. Links only: an icon's `<use href="#…">` stays on this page. */
+export function linkHome(html: string): string {
+  return html.replace(/(<a\b[^>]*\shref=")#/g, "$1/#");
+}
 
 /** The prototype's <title> and meta description, for the page metadata. */
 export function loadSiteMeta(): { title: string; description: string } {

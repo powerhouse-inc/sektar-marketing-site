@@ -18,6 +18,9 @@
     "sync:design-system": "node scripts/sync-design-system.mjs"
   },
   "dependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "16.4.3",
     "@powerhousedao/reactor-browser": "6.2.3",
     "@privy-io/react-auth": "3.35.2",
     "@rainbow-me/rainbowkit": "^2.2.11",
@@ -28,6 +31,7 @@
     "next": "16.4.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "remark-gfm": "^4.0.1",
     "viem": "~2.50.4",
     "wagmi": "^2.19.5"
   },
@@ -35,6 +39,7 @@
     "@playwright/test": "^1.60.0",
     "@powerhousedao/ph-cli": "6.2.3",
     "@powerhousedao/renown-package": "1.13.0",
+    "@types/mdx": "^2.0.14",
     "@types/node": "^24",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
