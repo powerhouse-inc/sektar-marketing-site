@@ -32,7 +32,64 @@ To try Sektar first, use the free option on the [home page](/#start). It runs in
 
 ## Sektar Desktop App
 
-<Placeholder>What to install, where your documents are kept, and how to update.</Placeholder>
+<Placeholder>What to install, and how to update.</Placeholder>
+
+### Signing in
+
+Sektar asks who you are when it starts, before anything else runs. <Planned />
+
+- **Renown** is the recommended way. Your browser opens so you can approve Sektar. Once you've signed in, Sektar also works without internet.
+- **A local key** is an Ethereum key kept on your computer, protected by a password. It needs no account and no internet.
+
+The identity you choose is the admin of that Sektar.
+
+### Where your documents are
+
+Each identity has its own folder and its own documents. <Planned />
+
+```
+settings.json     settings shared by every identity
+local.key         the local key, encrypted with your password
+local/            the local identity
+0x…/              a Renown identity, by its address
+```
+
+Every identity folder holds `.ph`, the storage itself, and `backups`. It also keeps a copy of your public profile, so Sektar can show your name when it's offline.
+
+Changing Renown identity takes you to that identity's documents. Replacing the local key keeps yours, so if you forget the password, replace the key.
+
+The password protects the key, not your documents, which aren't encrypted on disk.
+
+You choose the folder the first time Sektar starts. It's best not to use a folder that syncs, such as OneDrive or iCloud Drive: a live database can be damaged there. If the folder is on a drive that's been unplugged, Sektar says so and doesn't start with an empty one.
+
+### Settings
+
+`settings.json` applies to every identity, and Sektar reads it when it starts. Everything in it is optional. <Planned />
+
+| Setting | What it does | If you leave it out |
+| --- | --- | --- |
+| `memory.mainMb` | Memory for Sektar itself | Set from your computer's memory |
+| `memory.workflowWorkerMb` | Memory for each automation | Set from your computer's memory |
+| `memory.pgliteWorkerMb` | Memory for each database worker | Sektar's default |
+| `concurrency.workflowRuns` | Automations that run at once | Sektar's default |
+| `concurrency.reactorWorkers` | Workers that process documents | Sektar's default |
+| `renown.url` | The Renown instance to use | The official one |
+| `renown.switchboardUrl` | That instance's switchboard | Found from `renown.url` |
+| `registryUrl` | Where add-ons come from | Sektar's default |
+| `logLevel` | How much goes in the logs | `info` |
+| `startupTimeoutSeconds` | How long Sektar may take to start | 180 |
+| `automations` | Set to `false` to start with automations off, if one is stopping Sektar from starting | `true` |
+| `telemetry.diagnostics` | Diagnostics, kept on your computer | `true` |
+| `telemetry.errorReports` | Error reports sent to us | `false` |
+| `window.closeQuits` | Closing the window quits Sektar | `false` |
+
+Sign-in, ports and secrets can't be set here. A `settings.json` that can't be read stops Sektar from starting, and it tells you why.
+
+### Telemetry
+
+Nothing leaves your computer unless you turn on `telemetry.errorReports`. <Planned />
+
+Diagnostics stay on your computer, in `.ph/telemetry`, so you can look at them or send them to us if something goes wrong. Turn them off with `telemetry.diagnostics`.
 
 ### Configuring Portle
 
@@ -44,7 +101,7 @@ To try Sektar first, use the free option on the [home page](/#start). It runs in
 
 ### Configuring Renown
 
-<Placeholder>Signing in when Sektar starts, who the admin is, what changing identity does to your documents, and choosing a Renown instance.</Placeholder>
+<Placeholder>Choosing another Renown instance, or running your own.</Placeholder>
 
 ### Configuring Integrations
 
