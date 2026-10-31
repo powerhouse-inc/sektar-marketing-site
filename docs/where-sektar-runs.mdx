@@ -3,8 +3,9 @@
   Read from the code, not run. The table's rows come from:
   - hosts/desktop/host.js, hosts/cli/host.js, hosts/cli/README.md
   - .github/workflows/desktop.yml; the release's assets
-  The rules for signing in and identity are in docs/GAPS.md until the
-  Configuring Renown sections are written.
+  The Desktop App's Signing in, Where your documents are, Settings, Telemetry and
+  Configuring Renown sections were run on Windows, with qa/desktop/acceptance.mjs
+  in sektar and a stand-in for Renown. The official Renown wasn't tried.
   Where this page and the product disagree: docs/GAPS.md.
 */}
 
@@ -60,7 +61,7 @@ Changing Renown identity takes you to that identity's documents. Replacing the l
 
 The password protects the key, not your documents, which aren't encrypted on disk.
 
-You choose the folder the first time Sektar starts. It's best not to use a folder that syncs, such as OneDrive or iCloud Drive: a live database can be damaged there. If the folder is on a drive that's been unplugged, Sektar says so and doesn't start with an empty one.
+The first screen shows which folder your documents are in, and you can change it there. It's best not to use a folder that syncs, such as OneDrive or iCloud Drive: a live database can be damaged there. If the folder is on a drive that's been unplugged, Sektar says so and doesn't start with an empty one.
 
 ### Settings
 
@@ -72,7 +73,6 @@ You choose the folder the first time Sektar starts. It's best not to use a folde
 | `memory.workflowWorkerMb` | Memory for each automation | Set from your computer's memory |
 | `memory.pgliteWorkerMb` | Memory for each database worker | Sektar's default |
 | `concurrency.workflowRuns` | Automations that run at once | Sektar's default |
-| `concurrency.reactorWorkers` | Workers that process documents | Sektar's default |
 | `renown.url` | The Renown instance to use | The official one |
 | `renown.switchboardUrl` | That instance's switchboard | Found from `renown.url` |
 | `registryUrl` | Where add-ons come from | Sektar's default |
@@ -101,7 +101,9 @@ Diagnostics stay on your computer, in `.ph/telemetry`, so you can look at them o
 
 ### Configuring Renown
 
-<Placeholder>Choosing another Renown instance, or running your own.</Placeholder>
+To use another Renown instance, open Advanced on the first screen, or set `renown.url` in `settings.json`. Your documents stay where they are, because the folder follows your address. <Planned />
+
+<Placeholder>Running your own Renown instance.</Placeholder>
 
 ### Configuring Integrations
 
