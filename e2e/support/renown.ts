@@ -66,17 +66,16 @@ export async function fakeRenownPortal(
   return visits;
 }
 
-/** The sign-in dialog. */
-export const dialog = (page: Page) => page.locator("dialog#site-login");
+/** The sign-in steps on /login. */
+export const panel = (page: Page) => page.locator("#site-login");
 
-/** Opens the dialog from the header and signs in through the fake portal. */
-export async function signIn(page: Page, path = "/") {
+/** Signs in on the sign-in page, through the fake portal. */
+export async function signIn(page: Page, path = "/login") {
   await fakeRenownPortal(page);
   await page.goto(path);
-  await page.locator(".site-header__login").click();
-  await dialog(page).getByRole("button", { name: "Continue with Renown" }).click();
+  await panel(page).getByRole("button", { name: "Continue with Renown" }).click();
   await expect(
-    dialog(page).getByRole("heading", { name: "Where does your Sektar run?" }),
+    panel(page).getByRole("heading", { name: "Where does your Sektar run?" }),
   ).toBeVisible({ timeout: 30_000 });
   await expect
     .poll(async () =>

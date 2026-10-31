@@ -1,3 +1,4 @@
+import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
 /* The mock signer signs with a well-known key: never in a production build. */
@@ -52,4 +53,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/* The documentation is MDX (docs/). Turbopack takes its plugins by name. */
+const withMDX = createMDX({ options: { remarkPlugins: ["remark-gfm"] } });
+
+export default withMDX(nextConfig);

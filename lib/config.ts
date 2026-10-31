@@ -53,7 +53,7 @@ export const CLOUD_URL_TEMPLATE =
 
 /* The directory that lists the signed-in person's Sektar environments:
    Vetra's (`GET {url}/v1/environments?app=<id>`, with the Renown bearer).
-   Empty means the dialog offers remembered and typed addresses only. */
+   Empty means the sign-in page offers remembered and typed addresses only. */
 export const DIRECTORY_URL = process.env.NEXT_PUBLIC_DIRECTORY_URL || null;
 
 /* "Free": Sektar in the browser, documents kept in the visitor's own browser. */

@@ -10,6 +10,9 @@ served by Next.js:
 - **"Open your Sektar"** forwards the signed-in person to their own Sektar: a
   home computer through Portle, or a Sektar cloud environment.
 
+- **The documentation** at `/docs` is Markdown in `docs/`, and it is the spec for
+  Sektar and this site (`docs/README.md`).
+
 Started from the fusion template (`powerhouse-inc/fusion-boilerplate`), cut
 down to what a public site needs. The site reads no documents.
 
@@ -44,7 +47,8 @@ localhost.
 - the assets the page and the CSS refer to, to `public/sk/assets/`.
 - `site.html` to `content/site.html`, plus the parts the page renders:
   - `content/sections/*.html`: the preamble (skip link and sprites), header,
-    main, footer and the sign-in dialog, with asset paths pointed at `/sk`;
+    main, footer and the sign-in steps, with asset paths pointed at `/sk` and
+    the prototype's `#login` links at `/login`;
   - `content/sections/meta.json`: the `<title>` and meta description.
 - `public/sk/css/doc-browser.css`: the hero's browser-frame rules, extracted
   from the documentation-only `docs.css`.
@@ -59,6 +63,19 @@ design system doesn't have.
 Review the diff and commit it. `VERSION.json` tells you which design system the
 site shipped.
 
+## The documentation
+
+`docs/<slug>.mdx` holds the pages, and `lib/docs.ts` lists them, which drives the
+navigation, the sitemap and each page's metadata. `app/docs/` serves them inside
+the site's own header and footer (`components/site-frame.tsx`), with the header's
+links pointed back at the home page. MDX is compiled into the build, so `docs/`
+isn't needed at run time.
+
+`mdx-components.tsx` puts Markdown on the design system's classes and adds
+`<Planned />` and `<Placeholder>`. The pages' styling is in the design system's
+`site.css`, like the rest of the site. The Docs link in the header and footer is
+in its `site.html`, so a change to either goes through `pnpm sync:design-system`.
+
 ## The three ways to start
 
 The "Get started" cards are wired by `components/site-controller.tsx` (the
@@ -68,24 +85,30 @@ markup stays the design system's):
   Connect where documents stay in the visitor's own browser.
 - **On your own computer** offers the desktop app (`NEXT_PUBLIC_DOWNLOAD_URL`,
   the Sektar repo's latest release) and Log in, to reach a running one.
-- **In the cloud** opens the dialog on Sektar cloud. A signed-in person with an
-  invite code redeems it on Vetra (`NEXT_PUBLIC_VETRA_GRAPHQL_URL`, their Renown
-  bearer); Vetra sets up their own Sektar host, and the site waits until the
-  directory lists it READY, then opens it.
+- **In the cloud** opens the sign-in page on Sektar cloud (`/login?want=vetra`).
+  A signed-in person with an invite code redeems it on Vetra
+  (`NEXT_PUBLIC_VETRA_GRAPHQL_URL`, their Renown bearer); Vetra sets up their own
+  Sektar host, and the site waits until the directory lists it READY, then opens
+  it.
+
+`/download` is a placeholder for the Desktop App's installers. The card's Download
+button still goes straight to `NEXT_PUBLIC_DOWNLOAD_URL`.
 
 ## Sign-in and forwarding
 
-`components/site-controller.tsx` gives the verbatim markup its behaviour, on the
-prototype's `data-site-*` hooks, steps and copy. It differs from `js/site.js`
-only in the sign-in:
+Signing in is the `/login` page. `components/login-controller.tsx` gives its
+verbatim markup its behaviour, on the prototype's `data-site-*` hooks, steps and
+copy; `components/site-controller.tsx` paints the signed-in header on every page.
+Between them they differ from `js/site.js` only in the sign-in:
 
 - **Sign-in goes through the Renown SDK.** `RenownProvider` in redirect mode
   holds the site's key, goes to the portal, checks the credential it brings
   back and keeps the session. The prototype's own key, its REST calls to
   renown.id and viem from a CDN are gone.
-- **The return lands on `/` with `?user=`.** The dialog reopens at "Where does
-  your Sektar run?". A `?env=<url>` link survives the round trip and opens that
-  environment straight away.
+- **The return lands on `/login` with `?user=`.** The page goes on to "Where does
+  your Sektar run?", straight away for someone already signed in. A `?env=<url>`
+  link (the home page passes one on to `/login`) survives the round trip and
+  opens that environment straight away.
 - **Forwarding is a port of the prototype** (`lib/environments.ts`): typed
   addresses, environments remembered per Renown user on the device, an optional
   directory, and a reachability check before navigating.

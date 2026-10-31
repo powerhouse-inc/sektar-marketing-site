@@ -319,11 +319,12 @@
       <a href="#week">A week with Sektar</a>
       <a href="#why">Why Sektar</a>
       <a href="#start">Get started</a>
+      <a href="/docs">Docs</a>
     </nav>
     <div class="site-header__end">
       <a class="sk-btn sk-btn--ghost site-header__demo" href="#start">Start for free</a>
-      <button class="sk-btn sk-btn--primary sk-btn--pill site-header__login" type="button" data-site-open>Log in</button>
-      <button class="sk-btn sk-btn--secondary sk-btn--pill site-header__user" type="button" data-site-open><span class="sk-avatar sk-avatar--sm sk-avatar--forest" data-site-initials>MV</span><span data-site-username>Open my Sektar</span></button>
+      <a class="sk-btn sk-btn--primary sk-btn--pill site-header__login" href="#login" data-site-open>Log in</a>
+      <a class="sk-btn sk-btn--secondary sk-btn--pill site-header__user" href="#login" data-site-open><span class="sk-avatar sk-avatar--sm sk-avatar--forest" data-site-initials>MV</span><span data-site-username>Open my Sektar</span></a>
     </div>
   </div>
 </header>
@@ -338,7 +339,7 @@
     <p class="sk-lead">AI agents sort your mail, file your receipts and follow up your invoices, on your own computer or your own cloud.</p>
     <div class="site-actions">
       <a class="sk-btn sk-btn--primary sk-btn--lg sk-btn--pill" href="#start">Start for free <svg class="sk-icon"><use href="#i-arrow-right"/></svg></a>
-      <button class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" type="button" data-site-open>Log in</button>
+      <a class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" href="#login" data-site-open>Log in</a>
     </div>
   </div>
 
@@ -454,12 +455,12 @@
         <span class="sk-badge sk-badge--forest site-choice__badge">Most yours</span>
         <h3>On your own computer</h3>
         <p>Everything stays at home. We add access from anywhere, and backups.</p>
-        <button class="sk-btn sk-btn--primary" type="button" data-site-open>Log in</button>
+        <a class="sk-btn sk-btn--primary" href="#login" data-site-open>Log in</a>
       </article>
       <article class="sk-card site-choice">
         <h3>In the cloud</h3>
         <p>Always on, nothing to set up. Move home whenever you like.</p>
-        <button class="sk-btn sk-btn--secondary" type="button" data-site-open>Log in</button>
+        <a class="sk-btn sk-btn--secondary" href="#login" data-site-open>Log in</a>
       </article>
     </div>
   </div>
@@ -474,31 +475,18 @@
       <h2 class="sk-mt-3">Get your evenings back.</h2>
       <div class="site-actions">
         <a class="sk-btn sk-btn--primary sk-btn--lg sk-btn--pill" href="#start">Start for free</a>
-        <button class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" type="button" data-site-open>Log in</button>
+        <a class="sk-btn sk-btn--secondary sk-btn--lg sk-btn--pill" href="#login" data-site-open>Log in</a>
       </div>
     </div>
   </div>
 </section>
 </main>
 
-<!-- ============================================================ FOOTER -->
-<footer class="site-footer">
-  <div class="sk-container site-footer__inner">
-    <span class="sk-lockup" style="--sk-lockup-h:40px"><svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg><svg class="sk-lockup__wordmark"><use href="#sektar-wordmark"/></svg><span class="sk-lockup__tagline">Smarter every day</span></span>
-    <nav class="site-footer__links" aria-label="Footer">
-      <a href="#week">A week with Sektar</a><a href="#why">Why Sektar</a><a href="#start">Get started</a><a href="#top" data-site-open>Log in</a>
-    </nav>
-    <p class="site-footer__fine">© Sektar. Built on Powerhouse; sign-in by Renown.</p>
-  </div>
-</footer>
-
-<!-- ============================================================ SIGN-IN DIALOG -->
-<dialog class="site-dialog" id="site-login" aria-labelledby="site-login-title">
+<!-- ============================================================ SIGN-IN PAGE -->
+<section class="site-login" id="site-login" aria-labelledby="site-login-title" hidden>
   <div class="sk-modal">
-    <button class="sk-btn sk-btn--ghost sk-btn--icon sk-btn--sm site-dialog__close" type="button" aria-label="Close" data-site-close><svg class="sk-icon"><use href="#i-close"/></svg></button>
-
     <div data-step="start">
-      <h2 class="sk-modal__title" id="site-login-title">Open your Sektar</h2>
+      <h1 class="sk-modal__title" id="site-login-title">Open your Sektar</h1>
       <p class="sk-modal__body">Sign in with Renown, the identity behind Powerhouse apps. Then we take you to your Sektar, in the cloud or on your own computer.</p>
       <div class="sk-alert sk-alert--warning" data-site-filewarn hidden><svg class="sk-icon"><use href="#i-info"/></svg><div><div class="sk-alert__title">Serve this page over http(s)</div>Renown can't return to a file:// page. Run <code>python -m http.server</code> in <code>design-system/</code> and open <code>http://localhost:8000/site.html</code>.</div></div>
       <div class="sk-modal__footer"><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Continue with Renown <svg class="sk-icon"><use href="#i-arrow-right"/></svg></button></div>
@@ -506,18 +494,18 @@
     </div>
 
     <div data-step="busy" hidden>
-      <h2 class="sk-modal__title">One moment</h2>
+      <h1 class="sk-modal__title">One moment</h1>
       <p class="site-busy" role="status"><span class="sk-spinner"></span><span data-site-busy-text>Checking your sign-in…</span></p>
     </div>
 
     <div data-step="failed" hidden>
-      <h2 class="sk-modal__title">That didn't work</h2>
+      <h1 class="sk-modal__title">That didn't work</h1>
       <div class="sk-alert sk-alert--danger" role="alert"><svg class="sk-icon"><use href="#i-info"/></svg><div data-site-fail-text>Renown didn't confirm the sign-in.</div></div>
-      <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-close>Close</button><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Try again</button></div>
+      <div class="sk-modal__footer"><a class="sk-btn sk-btn--ghost" href="#top" data-site-close>Back</a><button class="sk-btn sk-btn--primary" type="button" data-site-renown>Try again</button></div>
     </div>
 
     <div data-step="where" hidden>
-      <h2 class="sk-modal__title">Where does your Sektar run?</h2>
+      <h1 class="sk-modal__title">Where does your Sektar run?</h1>
       <div class="site-who"><span class="sk-avatar sk-avatar--forest" data-site-avatar>MV</span><div style="min-width:0"><div class="site-who__name" data-site-name>Signed in</div><div class="site-who__meta" data-site-did></div></div><button class="sk-btn sk-btn--ghost sk-btn--sm" type="button" data-site-signout>Sign out</button></div>
       <div data-site-known hidden>
         <p class="sk-eyebrow" style="margin:0 0 var(--sk-space-2)">On this device</p>
@@ -541,12 +529,24 @@
     </div>
 
     <div data-step="down" hidden>
-      <h2 class="sk-modal__title">Your computer isn't answering</h2>
+      <h1 class="sk-modal__title">Your computer isn't answering</h1>
       <p class="sk-modal__body"><span data-site-down-host></span> didn't respond. The computer may be asleep, offline or restarting. Your data is safe, and your last backup is in the cloud.</p>
       <div class="sk-modal__footer"><button class="sk-btn sk-btn--ghost" type="button" data-site-back>Back</button><button class="sk-btn sk-btn--secondary" type="button" data-site-anyway>Open anyway</button><button class="sk-btn sk-btn--primary" type="button" data-site-retry>Try again</button></div>
     </div>
   </div>
-</dialog>
+</section>
+
+<!-- ============================================================ FOOTER -->
+<footer class="site-footer">
+  <div class="sk-container site-footer__inner">
+    <span class="sk-lockup" style="--sk-lockup-h:40px"><svg class="sk-lockup__symbol"><use href="#sektar-symbol"/></svg><svg class="sk-lockup__wordmark"><use href="#sektar-wordmark"/></svg><span class="sk-lockup__tagline">Smarter every day</span></span>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="#week">A week with Sektar</a><a href="#why">Why Sektar</a><a href="#start">Get started</a><a href="/docs">Docs</a><a href="#login" data-site-open>Log in</a>
+    </nav>
+    <p class="site-footer__fine">© Sektar. Built on Powerhouse; sign-in by Renown.</p>
+  </div>
+</footer>
+
 
 <!-- ============================================================ PROTOTYPE NOTES (documentation) -->
 <section class="site-notes" id="notes" aria-labelledby="notes-title">

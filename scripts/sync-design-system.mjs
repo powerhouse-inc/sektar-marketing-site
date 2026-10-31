@@ -58,7 +58,8 @@ for (const name of CSS) copy(join(source, "css", name), join(out, "css", name));
 copy(join(source, "site.html"), join(content, "site.html"));
 
 // The page's sections. Left out: the prototype bar, the prototype notes and
-// js/site.js (components/site-controller.tsx replaces it, on the Renown SDK).
+// js/site.js (components/site-controller.tsx and login-controller.tsx replace
+// it, on the Renown SDK).
 function between(text, start, end, name) {
   const from = text.indexOf(start);
   if (from < 0) fail(`site.html: the ${name} (${start}) is missing.`);
@@ -70,7 +71,9 @@ function fail(message) {
   console.error(message);
   process.exit(1);
 }
-const vendorPaths = (text) => text.replace(/\b(src|href)="assets\//g, '$1="/sk/assets/');
+// The prototype is one file, where sign-in is a view; here it is the /login page.
+const vendorPaths = (text) =>
+  text.replace(/\b(src|href)="assets\//g, '$1="/sk/assets/').replaceAll('href="#login"', 'href="/login"');
 {
   const html = readFileSync(join(source, "site.html"), "utf8");
   const bodyTag = html.indexOf("<body");
@@ -90,8 +93,13 @@ const vendorPaths = (text) => text.replace(/\b(src|href)="assets\//g, '$1="/sk/a
     header: vendorPaths(between(body, '<header class="site-header"', "</header>", "site header")),
     main: vendorPaths(between(body, '<main id="top"', "</main>", "main content")),
     footer: vendorPaths(between(body, '<footer class="site-footer"', "</footer>", "footer")),
-    dialog: vendorPaths(
-      between(body, '<dialog class="site-dialog"', "</dialog>", "sign-in dialog")
+    login: vendorPaths(
+      between(body, '<section class="site-login"', "</section>", "sign-in page")
+        // The prototype hides the view until it is opened; here it is the page.
+        .replace(/(<section class="site-login"[^>]*) hidden>/, "$1>")
+        // A click before the page is live would be lost, and before Renown is
+        // ready it would go wrong: login-controller.tsx enables these.
+        .replaceAll(" data-site-renown>", " data-site-renown disabled>")
         // Only the file:// prototype needs this warning.
         .replace(/<div class="sk-alert sk-alert--warning" data-site-filewarn[\s\S]*?<\/div><\/div>/, ""),
     ),

@@ -129,20 +129,17 @@
 .site-footer__links a:hover { color: var(--sk-text); }
 .site-footer__fine { width: 100%; font-size: var(--sk-text-xs); color: var(--sk-text-muted); margin: 0; }
 
-/* --------------------------------------------------------------- sign-in dialog */
-.site-dialog {
-  margin: auto; padding: 0; border: 0; background: transparent; color: inherit;
-  width: min(520px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: visible;
-}
-.site-dialog::backdrop { background: var(--sk-overlay); }
-.site-dialog .sk-modal { position: relative; width: 100%; max-height: calc(100dvh - 32px); overflow: auto; padding: var(--sk-space-8) var(--sk-space-6) var(--sk-space-6); }
-@media (min-width: 560px) { .site-dialog .sk-modal { padding: var(--sk-space-8); } }
-.site-dialog__close { position: absolute; top: var(--sk-space-3); right: var(--sk-space-3); }
-.site-dialog [data-step] { display: grid; gap: var(--sk-space-4); }
-.site-dialog [data-step][hidden] { display: none; }
-.site-dialog .sk-modal__title { margin: 0; padding-right: var(--sk-space-8); }
-.site-dialog .sk-modal__body { margin: 0; }
-.site-dialog .sk-modal__footer { margin-top: 0; flex-wrap: wrap; }
+/* --------------------------------------------------------------- sign-in page (/login) */
+.site-login { width: min(520px, calc(100% - 2 * var(--sk-gutter))); margin-inline: auto; padding-block: clamp(32px, 6vw, 88px); }
+.site-login .sk-modal { width: 100%; max-width: none; padding: var(--sk-space-8) var(--sk-space-6) var(--sk-space-6); }
+@media (min-width: 560px) { .site-login .sk-modal { padding: var(--sk-space-8); } }
+.site-login [data-step] { display: grid; gap: var(--sk-space-4); }
+.site-login [data-step][hidden] { display: none; }
+.site-login .sk-modal__title { margin: 0; }
+.site-login .sk-modal__body { margin: 0; }
+.site-login .sk-modal__footer { margin-top: 0; flex-wrap: wrap; }
+/* A signed-in visitor goes straight to "Where does your Sektar run?". */
+.site-body.is-signed-in .site-login [data-step="start"] { display: none; }
 .site-busy { display: flex; align-items: center; gap: var(--sk-space-3); color: var(--sk-text-secondary); font-size: var(--sk-text-md); }
 
 .site-who { display: flex; align-items: center; gap: var(--sk-space-3); padding: var(--sk-space-3); border-radius: var(--sk-radius-md); background: var(--sk-bg-subtle); }
@@ -170,6 +167,64 @@
 .site-where__preview b { color: var(--sk-text-secondary); font-weight: 500; }
 .site-divider { display: flex; align-items: center; gap: var(--sk-space-3); font-size: var(--sk-text-xs); color: var(--sk-text-muted); }
 .site-divider::before, .site-divider::after { content: ""; flex: 1; border-top: 1px solid var(--sk-border-subtle); }
+
+/* --------------------------------------------------------------- documentation pages (/docs)
+   The markup is the site's, from Markdown; the look is here, as for the rest of the site. */
+.site-docs { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); align-items: start; padding-block: var(--sk-space-10) var(--sk-space-16); }
+.site-docs__nav { position: sticky; top: calc(72px + var(--sk-space-10)); }
+.site-docs__nav .sk-eyebrow { margin: 0 0 var(--sk-space-2); padding-inline: var(--sk-space-3); }
+.site-docs__nav .sk-nav__item { padding: var(--sk-space-2) var(--sk-space-3); font-size: var(--sk-text-sm); }
+.site-docs__main { min-width: 0; }
+.site-docs__notice { margin-bottom: var(--sk-space-8); }
+.site-docs__main .sk-alert .sk-icon { --sk-icon-3: var(--sk-bg); } /* an alert draws every tone alike, which fills in the "i" */
+
+.site-docs__article > h1 { margin: 0 0 var(--sk-space-4); font-size: clamp(2.25rem, 4.4vw, var(--sk-text-5xl)); line-height: 1.08; letter-spacing: -0.02em; }
+.site-docs__article > h2 { margin: var(--sk-space-12) 0 var(--sk-space-3); scroll-margin-top: calc(72px + var(--sk-space-6)); }
+.site-docs__article > h3 { margin: var(--sk-space-8) 0 var(--sk-space-3); font-size: var(--sk-text-xl); }
+.site-docs__article > p, .site-docs__article > ul, .site-docs__article > ol { max-width: 68ch; color: var(--sk-text-secondary); }
+.site-docs__article > p { margin-block: 0; }
+.site-docs__article > p + p { margin-top: var(--sk-space-4); }
+.site-docs__article > h1 + p { font-size: var(--sk-text-lg); color: var(--sk-text); }
+.site-docs__article code { overflow-wrap: anywhere; }
+
+.site-docs__table { margin-block: var(--sk-space-8); }
+.site-docs__table .sk-table { font-size: var(--sk-text-sm); }
+.site-docs__table thead th { white-space: normal; vertical-align: bottom; }
+.site-docs__table thead a { display: block; margin-top: var(--sk-space-1); font-size: var(--sk-text-sm); letter-spacing: normal; text-transform: none; }
+.site-docs__table td { vertical-align: top; color: var(--sk-text-secondary); }
+.site-docs__table tbody th {
+  padding: var(--sk-space-3); border-bottom: 1px solid var(--sk-border-subtle); vertical-align: top;
+  font-size: inherit; font-weight: var(--sk-weight-semibold); letter-spacing: normal; text-transform: none; white-space: normal; color: var(--sk-text);
+}
+.site-docs__table tbody tr:last-child th { border-bottom: 0; }
+.site-docs__table tbody tr:hover th { background: var(--sk-surface-2); }
+.site-docs__planned { white-space: nowrap; }
+
+.site-docs__pages { list-style: none; margin: var(--sk-space-8) 0 0; padding: 0; display: grid; gap: var(--sk-space-4); max-width: 68ch; }
+.site-docs__pages li { margin: 0; }
+.site-docs__page { display: block; color: inherit; text-decoration: none; }
+.site-docs__page h2 { margin: 0 0 var(--sk-space-1); font-size: var(--sk-text-xl); }
+.site-docs__page p { margin: 0; color: var(--sk-text-secondary); font-size: var(--sk-text-md); }
+
+@media (max-width: 900px) {
+  .site-docs { grid-template-columns: minmax(0, 1fr); gap: var(--sk-space-6); padding-top: var(--sk-space-6); }
+  .site-docs__nav { position: static; }
+  .site-docs__nav .sk-nav { flex-direction: row; flex-wrap: wrap; }
+}
+/* A phone has no room for four columns: each row becomes a block, each cell names its column.
+   The column headings stay, as a list above the rows, because they carry the links. */
+@media (max-width: 720px) {
+  .site-docs__table { overflow-x: visible; }
+  .site-docs__table thead th { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sk-space-3); padding: var(--sk-space-1) 0; border: 0; }
+  .site-docs__table thead th:first-child { display: none; }
+  .site-docs__table thead a { margin-top: 0; }
+  .site-docs__table table, .site-docs__table thead, .site-docs__table tbody, .site-docs__table tr, .site-docs__table tbody th, .site-docs__table td { display: block; }
+  .site-docs__table tr { padding-block: var(--sk-space-4); border-bottom: 1px solid var(--sk-border-subtle); }
+  .site-docs__table tbody tr:last-child { border-bottom: 0; }
+  .site-docs__table tbody th { padding: 0 0 var(--sk-space-1); border: 0; font-size: var(--sk-text-md); }
+  .site-docs__table td { padding: var(--sk-space-2) 0 0; border: 0; }
+  .site-docs__table td::before { content: attr(data-label); display: block; font-size: var(--sk-text-2xs); font-weight: var(--sk-weight-medium); letter-spacing: var(--sk-tracking-eyebrow); text-transform: uppercase; color: var(--sk-text-muted); }
+}
 
 /* --------------------------------------------------------------- prototype notes (documentation) */
 .site-notes { border-top: 1px dashed var(--sk-border-strong); padding-block: var(--sk-space-10); background: var(--sk-bg-subtle); }
