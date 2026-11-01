@@ -63,6 +63,10 @@ The password protects the key, not your documents, which aren't encrypted on dis
 
 The first screen shows which folder your documents are in, and you can change it there. It's best not to use a folder that syncs, such as OneDrive or iCloud Drive: a live database can be damaged there. If the folder is on a drive that's been unplugged, Sektar says so and doesn't start with an empty one.
 
+### Closing Sektar
+
+Closing the window leaves Sektar running in the tray, so your automations carry on. To stop it, choose Quit from the tray icon, or set `window.closeQuits` below. Sektar closes its databases first, which normally takes a second or two, so the next start has nothing to repair. <Planned />
+
 ### Settings
 
 `settings.json` applies to every identity, and Sektar reads it when it starts. Everything in it is optional. <Planned />
