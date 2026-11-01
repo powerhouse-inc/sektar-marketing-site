@@ -57,6 +57,8 @@ local/            the local identity
 
 Every identity folder holds `.ph`, the storage itself, and `backups`. It also keeps a copy of your public profile, so Sektar can show your name when it's offline.
 
+`.ph` also holds what your automations keep: their downloads, and the key that protects your connected accounts. So a copy of an identity's folder can use those accounts, and needs the care you'd give a password. <Planned />
+
 Changing Renown identity takes you to that identity's documents. Replacing the local key keeps yours, so if you forget the password, replace the key.
 
 The password protects the key, not your documents, which aren't encrypted on disk.
