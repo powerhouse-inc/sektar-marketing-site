@@ -434,6 +434,7 @@ export function SiteController() {
         }
         if (stale()) return;
         const start = Date.now();
+        const tenant: { tenantId?: string } = {};
         let steps: StepState[] = setupSteps(AFTER_REDEEM, null, start);
         renderSetup(steps, start, null);
         while (Date.now() - start < CLOUD_WAIT_MS) {
@@ -443,7 +444,7 @@ export function SiteController() {
           if (stale()) return;
           if (made) remember(user.did, made);
           const host = made ? new URL(made.url).hostname : null;
-          const seen = host ? await fetchSetupSignals(host, token) : null;
+          const seen = host ? await fetchSetupSignals(host, token, tenant) : null;
           const serving = made?.status === "READY" && (await serves(made.url));
           if (stale()) return;
           steps = setupSteps(

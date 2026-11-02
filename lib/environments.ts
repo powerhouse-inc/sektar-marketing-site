@@ -221,6 +221,7 @@ export async function redeemCloud(code: string, bearer: string): Promise<void> {
 export function fetchSetupSignals(
   host: string,
   bearer: string,
+  memo?: { tenantId?: string },
 ): Promise<{ databaseReady: boolean; pulling: boolean; starting: boolean }> {
-  return querySetupSignals(VETRA_GRAPHQL_URL, host, bearer);
+  return querySetupSignals(VETRA_GRAPHQL_URL, host, bearer, fetch, memo);
 }

@@ -26,14 +26,20 @@ export async function querySetupSignals(
   host: string,
   bearer: string,
   fetcher: typeof fetch = fetch,
+  memo: { tenantId?: string } = {},
 ): Promise<Signals> {
   const none = { databaseReady: false, pulling: false, starting: false };
   try {
-    const subdomain = host.split(".")[0];
-    const mine = await vetraQuery<{
-      myEnvironments?: { subdomain?: string | null; tenantId?: string | null }[];
-    }>(fetcher, url, bearer, "query { myEnvironments { id name subdomain tenantId status } }");
-    const tenantId = mine?.myEnvironments?.find((e) => e.subdomain === subdomain)?.tenantId;
+    // A host's tenant id never changes: look it up until found, then reuse it
+    // (the caller keeps `memo` for the length of one wait).
+    if (!memo.tenantId) {
+      const subdomain = host.split(".")[0];
+      const mine = await vetraQuery<{
+        myEnvironments?: { subdomain?: string | null; tenantId?: string | null }[];
+      }>(fetcher, url, bearer, "query { myEnvironments { id name subdomain tenantId status } }");
+      memo.tenantId = mine?.myEnvironments?.find((e) => e.subdomain === subdomain)?.tenantId ?? undefined;
+    }
+    const tenantId = memo.tenantId;
     if (!tenantId) return none;
     const [pods, events] = await Promise.all([
       vetraQuery<{
