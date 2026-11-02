@@ -275,3 +275,28 @@ test("shows no checklist when the invite code is refused", async ({ page }) => {
   await expect(dialog(page).locator("[data-site-fail-text]")).toContainText("That code didn't work: Code already used");
   await expect(page.locator(".site-setup")).toHaveCount(0);
 });
+
+test("closing the dialog mid-setup stops the checklist and the polling", async ({ page }) => {
+  const vetra = await fakeVetra(page);
+  let requests = 0;
+  page.on("request", (r) => {
+    if (r.url().startsWith(VETRA) || r.url().startsWith(DIRECTORY)) requests++;
+  });
+  await redeem(page);
+  vetra.stage = 1;
+  await expect(dialog(page).locator("ol.site-setup > li").nth(2)).toHaveClass(/is-current/, { timeout: 15_000 });
+
+  await page.keyboard.press("Escape");
+  await expect(dialog(page)).toBeHidden();
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+  await page.waitForTimeout(700); // let an in-flight poll finish
+  const settled = requests;
+  await page.waitForTimeout(1500); // three poll intervals
+  expect(requests).toBe(settled);
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+
+  // Reopened: no stale list.
+  await page.locator("header").getByRole("button", { name: "Open my Sektar" }).click();
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+  await expect(dialog(page).getByRole("heading", { name: "Where does your Sektar run?" })).toBeVisible();
+});

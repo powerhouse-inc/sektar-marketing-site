@@ -141,7 +141,13 @@ export function SiteController() {
       deepLink.current = null;
     }
 
+    /* Which cloud setup run may still draw in the dialog; a new number cancels the old. */
+    let run = 0;
     function step(name: string) {
+      if (name !== "busy") {
+        run++;
+        clearSetup();
+      }
       dialog!.querySelectorAll<HTMLElement>("[data-step]").forEach((el) => {
         el.hidden = el.dataset.step !== name;
       });
@@ -372,6 +378,7 @@ export function SiteController() {
       step("down");
     }
     function go(user: User, env: Environment, keep: boolean) {
+      run++;
       pending = { user, env, keep };
       if (keep) remember(user.did, env);
       const host = new URL(env.url).hostname;
@@ -405,48 +412,61 @@ export function SiteController() {
      * opens it.
      */
     async function startCloud(user: User, code: string) {
+      const mine = ++run;
+      const stale = () => run !== mine;
       busy("Setting up your Sektar…");
-      const AFTER_REDEEM = { ...NOTHING, redeemed: true };
-      const bearer = await directoryBearer();
-      if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
-      // What the person had before: the directory's list and this browser's.
-      const before = [
-        ...knownEnvs(user.did).map((e) => e.url),
-        ...(await fromDirectory(user.did, bearer)).map((e) => e.url),
-      ];
       try {
-        await redeemCloud(code, bearer);
+        const AFTER_REDEEM = { ...NOTHING, redeemed: true };
+        const bearer = await directoryBearer();
+        if (stale()) return;
+        if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
+        // What the person had before: the directory's list and this browser's.
+        const before = [
+          ...knownEnvs(user.did).map((e) => e.url),
+          ...(await fromDirectory(user.did, bearer)).map((e) => e.url),
+        ];
+        if (stale()) return;
+        try {
+          await redeemCloud(code, bearer);
+        } catch (err) {
+          if (stale()) return;
+          return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
+        }
+        if (stale()) return;
+        const start = Date.now();
+        let steps: StepState[] = setupSteps(AFTER_REDEEM, null, start);
+        renderSetup(steps, start, null);
+        while (Date.now() - start < CLOUD_WAIT_MS) {
+          const token = (await directoryBearer()) ?? bearer;
+          if (stale()) return;
+          const made = newEnvironment(before, await fromDirectory(user.did, token));
+          if (stale()) return;
+          if (made) remember(user.did, made);
+          const host = made ? new URL(made.url).hostname : null;
+          const seen = host ? await fetchSetupSignals(host, token) : null;
+          const serving = made?.status === "READY" && (await serves(made.url));
+          if (stale()) return;
+          steps = setupSteps(
+            {
+              redeemed: true,
+              reserved: Boolean(made),
+              databaseReady: seen?.databaseReady ?? false,
+              pulling: seen?.pulling ?? false,
+              starting: seen?.starting ?? false,
+              serving,
+            },
+            steps,
+            Date.now(),
+          );
+          if (serving && made) return navigate(made);
+          renderSetup(steps, start, host);
+          await sleep(CLOUD_POLL_MS);
+          if (stale()) return;
+        }
+        fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
       } catch (err) {
-        return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
+        if (!stale()) fail(`Setting up your Sektar failed: ${err instanceof Error ? err.message : String(err)}`);
       }
-      const start = Date.now();
-      let steps: StepState[] | null = null;
-      let host: string | null = null;
-      renderSetup((steps = setupSteps(AFTER_REDEEM, null, start)), start, host);
-      while (Date.now() - start < CLOUD_WAIT_MS) {
-        const token = (await directoryBearer()) ?? bearer;
-        const made = newEnvironment(before, await fromDirectory(user.did, token));
-        if (made) remember(user.did, made);
-        host = made ? new URL(made.url).hostname : null;
-        const seen = host ? await fetchSetupSignals(host, token) : null;
-        const serving = made?.status === "READY" && (await serves(made.url));
-        steps = setupSteps(
-          {
-            redeemed: true,
-            reserved: Boolean(made),
-            databaseReady: seen?.databaseReady ?? false,
-            pulling: seen?.pulling ?? false,
-            starting: seen?.starting ?? false,
-            serving,
-          },
-          steps,
-          Date.now(),
-        );
-        if (serving && made) return navigate(made);
-        renderSetup(steps, start, host);
-        await sleep(CLOUD_POLL_MS);
-      }
-      fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
     }
     function onInvite(e: SubmitEvent) {
       e.preventDefault();
@@ -521,6 +541,8 @@ export function SiteController() {
       go(user, env, $<HTMLInputElement>("[data-site-remember]").checked);
     }
     function onClose() {
+      run++;
+      clearSetup();
       opener?.focus?.();
     }
 
