@@ -26,12 +26,16 @@ export async function querySetupSignals(
   host: string,
   bearer: string,
   fetcher: typeof fetch = fetch,
-  memo: { tenantId?: string } = {},
+  memo: { host?: string; tenantId?: string } = {},
 ): Promise<Signals> {
   const none = { databaseReady: false, pulling: false, starting: false };
   try {
     // A host's tenant id never changes: look it up until found, then reuse it
     // (the caller keeps `memo` for the length of one wait).
+    if (memo.host !== host) {
+      memo.host = host;
+      memo.tenantId = undefined;
+    }
     if (!memo.tenantId) {
       const subdomain = host.split(".")[0];
       const mine = await vetraQuery<{

@@ -203,8 +203,12 @@ export function SiteController() {
       announce.dataset.say = said;
       // A live region only announces changes made after it is in the DOM: the
       // first text goes in on a later tick.
-      if (fresh) setTimeout(() => (announce.textContent = announce.dataset.say ?? ""), 100);
-      else if (announce.textContent !== said) announce.textContent = said;
+      const write = () => {
+        const text = announce.dataset.say ?? "";
+        if (announce.textContent !== text) announce.textContent = text;
+      };
+      if (fresh) setTimeout(write, 100);
+      else write();
       hostEl!.textContent = host ?? "";
       hostEl!.hidden = !host;
       list.textContent = "";
@@ -458,7 +462,7 @@ export function SiteController() {
         }
         if (stale()) return;
         const start = Date.now();
-        const tenant: { tenantId?: string } = {};
+        const tenant: { host?: string; tenantId?: string } = {};
         let steps: StepState[] = setupSteps(AFTER_REDEEM, null, start);
         renderSetup(steps, start, null);
         while (Date.now() - start < CLOUD_WAIT_MS) {
@@ -590,6 +594,7 @@ export function SiteController() {
     }
 
     return () => {
+      run++; // an unmounted controller's in-flight runs stop
       document.removeEventListener("click", onDocumentClick);
       dialog.removeEventListener("click", onDialogClick);
       dialog.removeEventListener("close", onClose);
