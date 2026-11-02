@@ -212,3 +212,58 @@ export async function redeemCloud(code: string, bearer: string): Promise<void> {
   if (!response.ok || message) throw new Error(message || `Vetra answered ${response.status}`);
 }
 
+
+type Gql<T> = { data?: T; errors?: unknown[] } | null;
+
+async function vetraQuery<T>(bearer: string, query: string, variables?: object): Promise<T | null> {
+  const response = await fetch(VETRA_GRAPHQL_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${bearer}` },
+    body: JSON.stringify({ query, variables }),
+  });
+  const body = (await response.json().catch(() => null)) as Gql<T>;
+  if (!response.ok || body?.errors?.length || !body?.data) return null;
+  return body.data;
+}
+
+/**
+ * What Vetra shows of a new environment's setup: the database pod, the app
+ * image being pulled, the app pod running. Any error or refusal (the owner is
+ * not set yet) answers all false; it never throws.
+ */
+export async function fetchSetupSignals(
+  host: string,
+  bearer: string,
+): Promise<{ databaseReady: boolean; pulling: boolean; starting: boolean }> {
+  const none = { databaseReady: false, pulling: false, starting: false };
+  try {
+    const subdomain = host.split(".")[0];
+    const mine = await vetraQuery<{
+      myEnvironments?: { subdomain?: string | null; tenantId?: string | null }[];
+    }>(bearer, "query { myEnvironments { id name subdomain tenantId status } }");
+    const tenantId = mine?.myEnvironments?.find((e) => e.subdomain === subdomain)?.tenantId;
+    if (!tenantId) return none;
+    const [pods, events] = await Promise.all([
+      vetraQuery<{ environmentPods?: { component?: string; phase?: string; ready?: boolean }[] }>(
+        bearer,
+        "query ($t: String!) { environmentPods(tenantId: $t) { name component phase ready restartCount } }",
+        { t: tenantId },
+      ),
+      vetraQuery<{ environmentEvents?: { reason?: string; involvedObject?: string }[] }>(
+        bearer,
+        "query ($t: String!) { environmentEvents(tenantId: $t, limit: 20) { type reason message involvedObject timestamp } }",
+        { t: tenantId },
+      ),
+    ]);
+    const podList = pods?.environmentPods ?? [];
+    return {
+      databaseReady: podList.some((p) => p.component === "database" && p.ready === true),
+      starting: podList.some((p) => p.component === "app" && p.phase === "RUNNING"),
+      pulling: (events?.environmentEvents ?? []).some(
+        (e) => e.reason === "Pulling" && /-app-/.test(e.involvedObject ?? ""),
+      ),
+    };
+  } catch {
+    return none;
+  }
+}
