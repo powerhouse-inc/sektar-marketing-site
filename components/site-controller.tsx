@@ -15,10 +15,12 @@ import {
   knownEnvs,
   redeemCloud,
   remember,
+  serves,
   typedEnv,
   type EnvKind,
   type Environment,
 } from "@/lib/environments";
+import { elapsed, newEnvironment } from "@/lib/cloud-wait";
 import { DOWNLOAD_URL, FREE_URL } from "@/lib/config";
 
 /* The card a visitor chose ("cloud" opens the dialog on Sektar cloud); kept
@@ -27,6 +29,8 @@ const WANT_KEY = "sektar.site.want";
 /* How long the site waits for a new cloud Sektar to be set up and running. */
 const CLOUD_WAIT_MS = 15 * 60 * 1000;
 const CLOUD_POLL_MS = 10 * 1000;
+/* How long opening a listed cloud Sektar waits for it to finish starting. */
+const CLOUD_START_WAIT_MS = 5 * 60 * 1000;
 
 /**
  * The site's behaviour, on the markup rendered verbatim from the design
@@ -294,47 +298,71 @@ export function SiteController() {
       busy(`Opening ${new URL(env.url).hostname}…`);
       location.assign(env.url);
     }
+    function down(env: Environment) {
+      $("[data-site-down-host]").textContent = new URL(env.url).hostname;
+      $('[data-step="down"] .sk-modal__title').textContent =
+        env.kind === "vetra" ? "Your cloud isn't answering" : "Your computer isn't answering";
+      step("down");
+    }
     function go(user: User, env: Environment, keep: boolean) {
       pending = { user, env, keep };
       if (keep) remember(user.did, env);
-      busy(`Looking for ${new URL(env.url).hostname}…`);
-      void answers(env.url).then((ok) => {
-        if (ok) return navigate(env);
-        $("[data-site-down-host]").textContent = new URL(env.url).hostname;
-        $('[data-step="down"] .sk-modal__title').textContent =
-          env.kind === "vetra" ? "Your cloud isn't answering" : "Your computer isn't answering";
-        step("down");
-      });
+      const host = new URL(env.url).hostname;
+      busy(`Looking for ${host}…`);
+      if (env.kind !== "vetra") {
+        void answers(env.url).then((ok) => (ok ? navigate(env) : down(env)));
+        return;
+      }
+      // A cloud Sektar's load balancer answers while Sektar is still starting
+      // (503 "no available server"); wait for Sektar itself, a little while.
+      void (async () => {
+        const start = Date.now();
+        while (Date.now() - start < CLOUD_START_WAIT_MS) {
+          if (pending?.env !== env) return; // the person went elsewhere
+          if (await serves(env.url)) return navigate(env);
+          if (!(await answers(env.url))) return down(env);
+          busy(`${host} is starting… ${elapsed(start)}`);
+          await sleep(CLOUD_POLL_MS / 2);
+        }
+        down(env);
+      })();
     }
 
     /* ------------------------------------------------ a new cloud Sektar */
     function sleep(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    /** Redeems the code, then waits until the directory lists a READY cloud Sektar, and opens it. */
+    /**
+     * Redeems the code, then waits for the cloud Sektar it made (not one the
+     * person already had) until it is READY and Sektar itself answers, and
+     * opens it.
+     */
     async function startCloud(user: User, code: string) {
       busy("Setting up your Sektar…");
       const bearer = await directoryBearer();
       if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
+      // What the person had before: the directory's list and this browser's.
+      const before = [
+        ...knownEnvs(user.did).map((e) => e.url),
+        ...(await fromDirectory(user.did, bearer)).map((e) => e.url),
+      ];
       try {
         await redeemCloud(code, bearer);
       } catch (err) {
         return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
       }
-      const deadline = Date.now() + CLOUD_WAIT_MS;
-      while (Date.now() < deadline) {
-        const found = (await fromDirectory(user.did, (await directoryBearer()) ?? bearer)).filter(
-          (e) => e.kind === "vetra",
+      const start = Date.now();
+      while (Date.now() - start < CLOUD_WAIT_MS) {
+        const made = newEnvironment(
+          before,
+          await fromDirectory(user.did, (await directoryBearer()) ?? bearer),
         );
-        const ready = found.find((e) => e.status === "READY");
-        if (ready) {
-          remember(user.did, ready);
-          return navigate(ready);
-        }
+        if (made) remember(user.did, made);
+        if (made?.status === "READY" && (await serves(made.url))) return navigate(made);
         busy(
-          found.length
-            ? "Starting your Sektar… This takes a few minutes the first time."
-            : "Setting up your Sektar…",
+          made
+            ? `Starting your Sektar at ${new URL(made.url).hostname}… ${elapsed(start)}. The first start takes a few minutes.`
+            : `Setting up your Sektar… ${elapsed(start)}`,
         );
         await sleep(CLOUD_POLL_MS);
       }
@@ -510,7 +538,7 @@ function inviteForm(where: HTMLFormElement): HTMLFormElement {
   form.innerHTML = `
     <div class="sk-field">
       <label class="sk-label" for="site-invite-input">Invite code</label>
-      <input id="site-invite-input" class="sk-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="sektar-…">
+      <input id="site-invite-input" class="sk-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="vetra-…">
       <p class="sk-hint">New here? Your code gives you your own Sektar in the cloud, set up in a few minutes.</p>
     </div>
     <div class="sk-modal__footer sk-mt-4"><button class="sk-btn sk-btn--primary" type="submit">Start my cloud Sektar</button></div>
