@@ -167,7 +167,7 @@ export function SiteController() {
     const busyStep = () => $<HTMLElement>('[data-step="busy"]');
     function clearSetup() {
       const panel = busyStep();
-      panel.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer").forEach((el) => el.remove());
+      panel.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer, .site-setup__status").forEach((el) => el.remove());
       panel.querySelector<HTMLElement>(".site-busy")!.hidden = false;
       panel.querySelector<HTMLElement>(".sk-modal__title")!.textContent = "One moment";
     }
@@ -187,8 +187,18 @@ export function SiteController() {
         footer.className = "site-setup__footer";
         footer.textContent =
           "Usually about 3 minutes. You can close this: it stays listed under “On this device”.";
-        title.after(hostEl, list, footer);
+        // One polite live region for the whole checklist: it holds only the
+        // current step, so a poll that changes nothing announces nothing.
+        const status = document.createElement("p");
+        status.className = "site-setup__status";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        title.after(hostEl, status, list, footer);
       }
+      const announce = panel.querySelector<HTMLElement>(".site-setup__status")!;
+      const now = steps.find((s) => s.current);
+      const said = now ? `${now.label}${now.sub ? `: ${now.sub}` : ""}` : "";
+      if (announce.textContent !== said) announce.textContent = said;
       hostEl!.textContent = host ?? "";
       hostEl!.hidden = !host;
       list.textContent = "";
