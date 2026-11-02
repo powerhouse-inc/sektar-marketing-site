@@ -178,7 +178,9 @@ export function SiteController() {
       panel.querySelector<HTMLElement>(".site-busy")!.hidden = true;
       let hostEl = panel.querySelector<HTMLElement>(".site-setup__host");
       let list = panel.querySelector<HTMLOListElement>("ol.site-setup");
+      let fresh = false;
       if (!list) {
+        fresh = true;
         hostEl = document.createElement("p");
         hostEl.className = "site-setup__host";
         list = document.createElement("ol");
@@ -198,7 +200,11 @@ export function SiteController() {
       const announce = panel.querySelector<HTMLElement>(".site-setup__status")!;
       const now = steps.find((s) => s.current);
       const said = now ? `${now.label}${now.sub ? `: ${now.sub}` : ""}` : "";
-      if (announce.textContent !== said) announce.textContent = said;
+      announce.dataset.say = said;
+      // A live region only announces changes made after it is in the DOM: the
+      // first text goes in on a later tick.
+      if (fresh) setTimeout(() => (announce.textContent = announce.dataset.say ?? ""), 100);
+      else if (announce.textContent !== said) announce.textContent = said;
       hostEl!.textContent = host ?? "";
       hostEl!.hidden = !host;
       list.textContent = "";
