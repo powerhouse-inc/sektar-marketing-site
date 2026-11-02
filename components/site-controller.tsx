@@ -378,13 +378,17 @@ export function SiteController() {
       step("down");
     }
     function go(user: User, env: Environment, keep: boolean) {
-      run++;
+      const mine = ++run;
+      const stale = () => run !== mine;
       pending = { user, env, keep };
       if (keep) remember(user.did, env);
       const host = new URL(env.url).hostname;
       busy(`Looking for ${host}…`);
       if (env.kind !== "vetra") {
-        void answers(env.url).then((ok) => (ok ? navigate(env) : down(env)));
+        void answers(env.url).then((ok) => {
+          if (stale()) return; // a retry, or the person went elsewhere
+          return ok ? navigate(env) : down(env);
+        });
         return;
       }
       // A cloud Sektar's load balancer answers while Sektar is still starting
@@ -392,11 +396,15 @@ export function SiteController() {
       void (async () => {
         const start = Date.now();
         while (Date.now() - start < CLOUD_START_WAIT_MS) {
-          if (pending?.env !== env) return; // the person went elsewhere
-          if (await serves(env.url)) return navigate(env);
-          if (!(await answers(env.url))) return down(env);
+          const serving = await serves(env.url);
+          if (stale()) return;
+          if (serving) return navigate(env);
+          const up = await answers(env.url);
+          if (stale()) return;
+          if (!up) return down(env);
           busy(`${host} is starting… ${elapsed(start)}`);
           await sleep(CLOUD_POLL_MS / 2);
+          if (stale()) return;
         }
         down(env);
       })();
