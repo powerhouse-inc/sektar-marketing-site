@@ -10,6 +10,7 @@ import {
   answers,
   cloudAffixes,
   envFromLink,
+  fetchSetupSignals,
   forget,
   fromDirectory,
   knownEnvs,
@@ -21,14 +22,14 @@ import {
   type Environment,
 } from "@/lib/environments";
 import { elapsed, newEnvironment } from "@/lib/cloud-wait";
-import { DOWNLOAD_URL, FREE_URL } from "@/lib/config";
+import { CLOUD_POLL_MS, DOWNLOAD_URL, FREE_URL } from "@/lib/config";
+import { setupSteps, type StepState } from "@/lib/setup-steps";
 
 /* The card a visitor chose ("cloud" opens the dialog on Sektar cloud); kept
    across the Renown redirect in sessionStorage. */
 const WANT_KEY = "sektar.site.want";
 /* How long the site waits for a new cloud Sektar to be set up and running. */
 const CLOUD_WAIT_MS = 15 * 60 * 1000;
-const CLOUD_POLL_MS = 10 * 1000;
 /* How long opening a listed cloud Sektar waits for it to finish starting. */
 const CLOUD_START_WAIT_MS = 5 * 60 * 1000;
 
@@ -42,6 +43,15 @@ const CLOUD_START_WAIT_MS = 5 * 60 * 1000;
  *
  * Renders nothing; it binds once and repaints when the Renown session changes.
  */
+
+const NOTHING = {
+  redeemed: false,
+  reserved: false,
+  databaseReady: false,
+  pulling: false,
+  starting: false,
+  serving: false,
+};
 
 type User = { did: string; name: string; initials: string; image?: string };
 
@@ -141,10 +151,67 @@ export function SiteController() {
       if (first && dialog!.open) setTimeout(() => first.focus(), 0);
     }
     function busy(text: string) {
+      clearSetup();
       $("[data-site-busy-text]").textContent = text;
       step("busy");
     }
+
+    /* The setup checklist lives inside the busy step (whose markup is the
+       design system's): built here, removed when the step is left or fails. */
+    const busyStep = () => $<HTMLElement>('[data-step="busy"]');
+    function clearSetup() {
+      const panel = busyStep();
+      panel.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer").forEach((el) => el.remove());
+      panel.querySelector<HTMLElement>(".site-busy")!.hidden = false;
+      panel.querySelector<HTMLElement>(".sk-modal__title")!.textContent = "One moment";
+    }
+    function renderSetup(steps: StepState[], start: number, host: string | null) {
+      const panel = busyStep();
+      const title = panel.querySelector<HTMLElement>(".sk-modal__title")!;
+      title.textContent = "Setting up your Sektar";
+      panel.querySelector<HTMLElement>(".site-busy")!.hidden = true;
+      let hostEl = panel.querySelector<HTMLElement>(".site-setup__host");
+      let list = panel.querySelector<HTMLOListElement>("ol.site-setup");
+      if (!list) {
+        hostEl = document.createElement("p");
+        hostEl.className = "site-setup__host";
+        list = document.createElement("ol");
+        list.className = "site-setup";
+        const footer = document.createElement("p");
+        footer.className = "site-setup__footer";
+        footer.textContent =
+          "Usually about 3 minutes. You can close this: it stays listed under “On this device”.";
+        title.after(hostEl, list, footer);
+      }
+      hostEl!.textContent = host ?? "";
+      hostEl!.hidden = !host;
+      list.textContent = "";
+      for (const s of steps) {
+        const li = document.createElement("li");
+        li.className = s.done ? "is-done" : s.current ? "is-current" : "";
+        if (s.current) li.setAttribute("aria-current", "step");
+        const label = document.createElement("span");
+        label.className = "site-setup__label";
+        label.textContent = s.label;
+        li.append(label);
+        if (s.sub) {
+          const sub = document.createElement("span");
+          sub.className = "site-setup__sub";
+          sub.textContent = s.sub;
+          li.append(sub);
+        }
+        if (s.done && s.doneAt !== null) {
+          const time = document.createElement("span");
+          time.className = "site-setup__time";
+          time.textContent = elapsed(start, s.doneAt);
+          li.append(time);
+        }
+        list.append(li);
+      }
+      step("busy");
+    }
     function fail(text: string) {
+      clearSetup();
       $("[data-site-fail-text]").textContent = text;
       step("failed");
     }
@@ -339,6 +406,7 @@ export function SiteController() {
      */
     async function startCloud(user: User, code: string) {
       busy("Setting up your Sektar…");
+      const AFTER_REDEEM = { ...NOTHING, redeemed: true };
       const bearer = await directoryBearer();
       if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
       // What the person had before: the directory's list and this browser's.
@@ -352,18 +420,30 @@ export function SiteController() {
         return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
       }
       const start = Date.now();
+      let steps: StepState[] | null = null;
+      let host: string | null = null;
+      renderSetup((steps = setupSteps(AFTER_REDEEM, null, start)), start, host);
       while (Date.now() - start < CLOUD_WAIT_MS) {
-        const made = newEnvironment(
-          before,
-          await fromDirectory(user.did, (await directoryBearer()) ?? bearer),
-        );
+        const token = (await directoryBearer()) ?? bearer;
+        const made = newEnvironment(before, await fromDirectory(user.did, token));
         if (made) remember(user.did, made);
-        if (made?.status === "READY" && (await serves(made.url))) return navigate(made);
-        busy(
-          made
-            ? `Starting your Sektar at ${new URL(made.url).hostname}… ${elapsed(start)}. The first start takes a few minutes.`
-            : `Setting up your Sektar… ${elapsed(start)}`,
+        host = made ? new URL(made.url).hostname : null;
+        const seen = host ? await fetchSetupSignals(host, token) : null;
+        const serving = made?.status === "READY" && (await serves(made.url));
+        steps = setupSteps(
+          {
+            redeemed: true,
+            reserved: Boolean(made),
+            databaseReady: seen?.databaseReady ?? false,
+            pulling: seen?.pulling ?? false,
+            starting: seen?.starting ?? false,
+            serving,
+          },
+          steps,
+          Date.now(),
         );
+        if (serving && made) return navigate(made);
+        renderSetup(steps, start, host);
         await sleep(CLOUD_POLL_MS);
       }
       fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
