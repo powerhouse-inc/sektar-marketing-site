@@ -167,7 +167,7 @@ export function SiteController() {
     const busyStep = () => $<HTMLElement>('[data-step="busy"]');
     function clearSetup() {
       const panel = busyStep();
-      panel.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer").forEach((el) => el.remove());
+      panel.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer, .site-setup__status").forEach((el) => el.remove());
       panel.querySelector<HTMLElement>(".site-busy")!.hidden = false;
       panel.querySelector<HTMLElement>(".sk-modal__title")!.textContent = "One moment";
     }
@@ -178,7 +178,9 @@ export function SiteController() {
       panel.querySelector<HTMLElement>(".site-busy")!.hidden = true;
       let hostEl = panel.querySelector<HTMLElement>(".site-setup__host");
       let list = panel.querySelector<HTMLOListElement>("ol.site-setup");
+      let fresh = false;
       if (!list) {
+        fresh = true;
         hostEl = document.createElement("p");
         hostEl.className = "site-setup__host";
         list = document.createElement("ol");
@@ -187,8 +189,26 @@ export function SiteController() {
         footer.className = "site-setup__footer";
         footer.textContent =
           "Usually about 3 minutes. You can close this: it stays listed under “On this device”.";
-        title.after(hostEl, list, footer);
+        // One polite live region for the whole checklist: it holds only the
+        // current step, so a poll that changes nothing announces nothing.
+        const status = document.createElement("p");
+        status.className = "site-setup__status";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        title.after(hostEl, status, list, footer);
       }
+      const announce = panel.querySelector<HTMLElement>(".site-setup__status")!;
+      const now = steps.find((s) => s.current);
+      const said = now ? `${now.label}${now.sub ? `: ${now.sub}` : ""}` : "";
+      announce.dataset.say = said;
+      // A live region only announces changes made after it is in the DOM: the
+      // first text goes in on a later tick.
+      const write = () => {
+        const text = announce.dataset.say ?? "";
+        if (announce.textContent !== text) announce.textContent = text;
+      };
+      if (fresh) setTimeout(write, 100);
+      else write();
       hostEl!.textContent = host ?? "";
       hostEl!.hidden = !host;
       list.textContent = "";
@@ -378,13 +398,17 @@ export function SiteController() {
       step("down");
     }
     function go(user: User, env: Environment, keep: boolean) {
-      run++;
+      const mine = ++run;
+      const stale = () => run !== mine;
       pending = { user, env, keep };
       if (keep) remember(user.did, env);
       const host = new URL(env.url).hostname;
       busy(`Looking for ${host}…`);
       if (env.kind !== "vetra") {
-        void answers(env.url).then((ok) => (ok ? navigate(env) : down(env)));
+        void answers(env.url).then((ok) => {
+          if (stale()) return; // a retry, or the person went elsewhere
+          return ok ? navigate(env) : down(env);
+        });
         return;
       }
       // A cloud Sektar's load balancer answers while Sektar is still starting
@@ -392,11 +416,15 @@ export function SiteController() {
       void (async () => {
         const start = Date.now();
         while (Date.now() - start < CLOUD_START_WAIT_MS) {
-          if (pending?.env !== env) return; // the person went elsewhere
-          if (await serves(env.url)) return navigate(env);
-          if (!(await answers(env.url))) return down(env);
+          const serving = await serves(env.url);
+          if (stale()) return;
+          if (serving) return navigate(env);
+          const up = await answers(env.url);
+          if (stale()) return;
+          if (!up) return down(env);
           busy(`${host} is starting… ${elapsed(start)}`);
           await sleep(CLOUD_POLL_MS / 2);
+          if (stale()) return;
         }
         down(env);
       })();
@@ -434,6 +462,7 @@ export function SiteController() {
         }
         if (stale()) return;
         const start = Date.now();
+        const tenant: { host?: string; tenantId?: string } = {};
         let steps: StepState[] = setupSteps(AFTER_REDEEM, null, start);
         renderSetup(steps, start, null);
         while (Date.now() - start < CLOUD_WAIT_MS) {
@@ -443,7 +472,7 @@ export function SiteController() {
           if (stale()) return;
           if (made) remember(user.did, made);
           const host = made ? new URL(made.url).hostname : null;
-          const seen = host ? await fetchSetupSignals(host, token) : null;
+          const seen = host ? await fetchSetupSignals(host, token, tenant) : null;
           const serving = made?.status === "READY" && (await serves(made.url));
           if (stale()) return;
           steps = setupSteps(
@@ -565,6 +594,7 @@ export function SiteController() {
     }
 
     return () => {
+      run++; // an unmounted controller's in-flight runs stop
       document.removeEventListener("click", onDocumentClick);
       dialog.removeEventListener("click", onDialogClick);
       dialog.removeEventListener("close", onClose);
