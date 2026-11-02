@@ -49,6 +49,10 @@ export default defineConfig({
         NEXT_PUBLIC_RENOWN_URL: FAKE_RENOWN_URL,
         NEXT_PUBLIC_RENOWN_SWITCHBOARD_URL: SWITCHBOARD_URL,
         NEXT_PUBLIC_SITE_URL: SITE_URL,
+        // Fake origins the specs intercept (e2e/site.spec.ts), and a short poll.
+        NEXT_PUBLIC_VETRA_GRAPHQL_URL: "http://vetra.test/graphql",
+        NEXT_PUBLIC_DIRECTORY_URL: "http://directory.test",
+        NEXT_PUBLIC_CLOUD_POLL_MS: "500",
       },
       stdout: "pipe",
       stderr: "pipe",

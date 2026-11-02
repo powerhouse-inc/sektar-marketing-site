@@ -9,6 +9,7 @@ import {
   VETRA_GRAPHQL_URL,
   PORTLE_URL_TEMPLATE,
 } from "@/lib/config";
+import { querySetupSignals } from "@/lib/setup-signals";
 
 export type EnvKind = "portle" | "vetra";
 
@@ -212,3 +213,14 @@ export async function redeemCloud(code: string, bearer: string): Promise<void> {
   if (!response.ok || message) throw new Error(message || `Vetra answered ${response.status}`);
 }
 
+/**
+ * What Vetra shows of a new environment's setup: the database pod, the app
+ * image being pulled, the app pod running. Any error or refusal (the owner is
+ * not set yet) answers all false; it never throws.
+ */
+export function fetchSetupSignals(
+  host: string,
+  bearer: string,
+): Promise<{ databaseReady: boolean; pulling: boolean; starting: boolean }> {
+  return querySetupSignals(VETRA_GRAPHQL_URL, host, bearer);
+}

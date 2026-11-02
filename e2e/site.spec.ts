@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SITE_URL } from "../playwright.config";
@@ -162,4 +162,141 @@ test("signs out from the dialog", async ({ page }) => {
       (await page.context().cookies()).some((c) => c.name === SESSION_COOKIE),
     )
     .toBe(false);
+});
+
+/* ------------------------------------------------ a new cloud Sektar */
+
+const VETRA = "http://vetra.test/graphql";
+const DIRECTORY = "http://directory.test";
+const NEW_HOST = "noble-lark.vetra.test";
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+};
+
+const SETUP_LABELS = [
+  "Invite code accepted",
+  "Your environment is reserved",
+  "Database ready",
+  "Downloading Sektar",
+  "Starting Sektar",
+  "Opening it for you",
+];
+
+/** Stands in for Vetra, its directory and the new Sektar; `state.stage` is what they report. */
+async function fakeVetra(page: Page, options: { refuse?: boolean } = {}) {
+  const state = { stage: 0 };
+  const json = (route: Route, body: unknown, status = 200) =>
+    route.fulfill({ status, headers: CORS, contentType: "application/json", body: JSON.stringify(body) });
+  const preflight = (route: Route) => route.request().method() === "OPTIONS" && route.fulfill({ status: 204, headers: CORS });
+
+  await page.route(`${VETRA}`, async (route) => {
+    if (await preflight(route)) return;
+    const { query, variables } = route.request().postDataJSON() as { query: string; variables?: { t?: string } };
+    if (query.includes("redeemInviteCode")) {
+      if (options.refuse) return json(route, { errors: [{ message: "Code already used" }] });
+      return json(route, { data: { vetraSubscriptions: { redeemInviteCode: { __typename: "X" } } } });
+    }
+    if (query.includes("myEnvironments"))
+      return json(route, { data: { myEnvironments: [{ id: "e1", name: "Sektar", subdomain: "noble-lark", tenantId: "t1", status: "PROVISIONING" }] } });
+    if (query.includes("environmentPods")) {
+      const pods = [];
+      if (state.stage >= 2) pods.push({ name: "db-0", component: "database", phase: "RUNNING", ready: true });
+      if (state.stage >= 4) pods.push({ name: "powerhouse-t1-app-0", component: "app", phase: "RUNNING", ready: false });
+      return json(route, { data: { environmentPods: pods } });
+    }
+    if (query.includes("environmentEvents") && variables?.t === "t1") {
+      const events = state.stage >= 3 ? [{ reason: "Pulling", involvedObject: "Pod/powerhouse-t1-app-0" }] : [];
+      return json(route, { data: { environmentEvents: events } });
+    }
+    return json(route, { data: {} });
+  });
+  await page.route(`${DIRECTORY}/**`, async (route) => {
+    if (await preflight(route)) return;
+    const environments =
+      state.stage >= 1
+        ? [{ connectUrl: `https://${NEW_HOST}/`, kind: "vetra", name: "Sektar", status: state.stage >= 5 ? "READY" : "PROVISIONING" }]
+        : [];
+    return json(route, { environments });
+  });
+  await page.route(`https://${NEW_HOST}/**`, async (route) => {
+    if (route.request().url().endsWith("build-hash.json"))
+      return route.fulfill(
+        state.stage >= 5
+          ? { status: 200, headers: CORS, contentType: "application/json", body: "{}" }
+          : { status: 503, headers: CORS, body: "no available server" },
+      );
+    return route.fulfill({ status: 200, contentType: "text/html", body: "<title>Sektar</title>" });
+  });
+  return state;
+}
+
+async function redeem(page: Page, code = "vetra-test") {
+  await signIn(page);
+  await dialog(page).getByRole("button", { name: "Sektar cloud" }).click();
+  await dialog(page).getByLabel("Invite code").fill(code);
+  await dialog(page).getByRole("button", { name: "Start my cloud Sektar" }).click();
+}
+
+test("shows the real setup steps while a cloud Sektar starts", async ({ page }) => {
+  const vetra = await fakeVetra(page);
+  await redeem(page);
+  const steps = dialog(page).locator("ol.site-setup > li");
+  await expect(dialog(page).getByRole("heading", { name: "Setting up your Sektar" })).toBeVisible();
+  await expect(steps).toHaveText(SETUP_LABELS.map((l) => new RegExp(l)));
+  await expect(dialog(page).locator("[data-step=busy]")).toContainText(
+    "Usually about 3 minutes. You can close this: it stays listed under “On this device”.",
+  );
+  // Redeemed, nothing reserved yet: the second step is the one in progress.
+  await expect(steps.nth(0)).toHaveClass(/is-done/);
+  await expect(steps.nth(1)).toHaveClass(/is-current/);
+
+  const tick = async (stage: number, done: number) => {
+    vetra.stage = stage;
+    await expect(steps.nth(done)).toHaveClass(/is-current/, { timeout: 15_000 });
+    for (let i = 0; i < done; i++) await expect(steps.nth(i)).toHaveClass(/is-done/);
+  };
+  await tick(1, 2);
+  await expect(dialog(page).locator(".site-setup__host")).toHaveText(NEW_HOST);
+  await tick(2, 3);
+  await expect(steps.nth(3)).toContainText("the first start fetches the app");
+  await tick(3, 4);
+  await expect(steps.nth(0).locator(".site-setup__time")).toHaveText(/^\d+:\d\d$/);
+  await tick(4, 5);
+
+  vetra.stage = 5;
+  await page.waitForURL(`https://${NEW_HOST}/`, { timeout: 15_000 });
+});
+
+test("shows no checklist when the invite code is refused", async ({ page }) => {
+  await fakeVetra(page, { refuse: true });
+  await redeem(page);
+  await expect(dialog(page).locator("[data-site-fail-text]")).toContainText("That code didn't work: Code already used");
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+});
+
+test("closing the dialog mid-setup stops the checklist and the polling", async ({ page }) => {
+  const vetra = await fakeVetra(page);
+  let requests = 0;
+  page.on("request", (r) => {
+    if (r.url().startsWith(VETRA) || r.url().startsWith(DIRECTORY)) requests++;
+  });
+  await redeem(page);
+  vetra.stage = 1;
+  await expect(dialog(page).locator("ol.site-setup > li").nth(2)).toHaveClass(/is-current/, { timeout: 15_000 });
+
+  await page.keyboard.press("Escape");
+  await expect(dialog(page)).toBeHidden();
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+  await page.waitForTimeout(700); // let an in-flight poll finish
+  const settled = requests;
+  await page.waitForTimeout(1500); // three poll intervals
+  expect(requests).toBe(settled);
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+
+  // Reopened: no stale list.
+  await page.locator("header").getByRole("button", { name: "Open my Sektar" }).click();
+  await expect(page.locator(".site-setup")).toHaveCount(0);
+  await expect(dialog(page).getByRole("heading", { name: "Where does your Sektar run?" })).toBeVisible();
 });
