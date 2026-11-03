@@ -6,6 +6,9 @@
   The Desktop App's Signing in, Where your documents are, Settings, Telemetry and
   Configuring Renown sections were run on Windows, with qa/desktop/acceptance.mjs
   in sektar and a stand-in for Renown. The official Renown wasn't tried.
+  The Desktop App's install steps and Google sign-in (2026-11-03) are planned:
+  read from the fix/desktop-release-pipeline branches of sektar and powerhouse,
+  and from a run of v1.0.7 on a Mac.
   Where this page and the product disagree: docs/GAPS.md.
 */}
 
@@ -25,7 +28,7 @@ Each one is a separate Sektar. Documents don't sync between them.
 
 Connected accounts on Sektar Cloud aren't fully working yet: a new environment can sign in to Google and read from it, but can't save what it reads.
 
-The downloaded Desktop App doesn't include Sektar's Google sign-in yet, so it can't connect Gmail or Google Calendar.
+The downloaded Desktop App comes with Sektar's Google sign-in, so it can connect Gmail and Google Calendar. <Planned />
 
 Google hasn't verified Sektar's app yet, so only accounts on our test list can connect Gmail or Google Calendar.
 
@@ -33,7 +36,13 @@ To try Sektar first, use the free option on the [home page](/#start). It runs in
 
 ## Sektar Desktop App
 
-<Placeholder>What to install, and how to update.</Placeholder>
+Download the installer for your computer from the [download page](/download). Sektar isn't signed by a registered developer yet, so your computer asks you to confirm before you open it the first time. <Planned />
+
+- **macOS (Apple silicon):** open the `.dmg` and drag Sektar into Applications. The first time you open it, macOS says it can't check it for malicious software. Open **System Settings**, then **Privacy & Security**, and choose **Open Anyway**.
+- **Windows:** run the installer. If SmartScreen stops it, choose **More info**, then **Run anyway**.
+- **Linux:** install the `.deb`.
+
+To update, install the new version over the old one. Your identities and documents stay where they are. <Planned />
 
 ### Signing in
 
