@@ -22,13 +22,15 @@ test("reaches the documentation from the home page", async ({ page }) => {
 test("compares the three ways to run Sektar, with a section for each", async ({ page }) => {
   await page.goto(PAGE);
   const names = ["Sektar Desktop App", "Sektar Cloud", "Self-hosted Sektar"];
-  const headers = page.locator(".site-docs__table thead th");
+  // The comparison is the page's first table; the settings table comes later.
+  const comparison = page.locator(".site-docs__table").first();
+  const headers = comparison.locator("thead th");
   await expect(headers).toHaveCount(4);
   for (const [i, name] of names.entries()) {
     await expect(headers.nth(i + 1)).toContainText(name);
     await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
   }
-  await expect(page.getByRole("rowheader")).toHaveText(["What it is", "How you start", "Without internet"]);
+  await expect(comparison.getByRole("rowheader")).toHaveText(["What it is", "How you start", "Without internet"]);
   await expect(page.locator(".site-docs__notice")).toContainText("Preliminary");
 
   // The Desktop App and Self-hosted Sektar each say how to configure these.
