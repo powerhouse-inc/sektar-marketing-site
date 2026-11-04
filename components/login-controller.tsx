@@ -6,20 +6,26 @@ import {
   answers,
   cloudAffixes,
   envFromLink,
+  fetchSetupSignals,
   forget,
   fromDirectory,
   knownEnvs,
   redeemCloud,
   remember,
+  serves,
   typedEnv,
   type EnvKind,
   type Environment,
 } from "@/lib/environments";
+import { elapsed, newEnvironment } from "@/lib/cloud-wait";
+import { CLOUD_POLL_MS } from "@/lib/config";
+import { setupSteps, type StepState } from "@/lib/setup-steps";
 import { userOf, type SiteUser as User } from "@/lib/site-user";
 
 /* How long the site waits for a new cloud Sektar to be set up and running. */
 const CLOUD_WAIT_MS = 15 * 60 * 1000;
-const CLOUD_POLL_MS = 10 * 1000;
+/* How long opening a listed cloud Sektar waits for it to finish starting. */
+const CLOUD_START_WAIT_MS = 5 * 60 * 1000;
 
 /**
  * The /login page's behaviour, on the markup rendered verbatim from the design
@@ -34,6 +40,15 @@ const CLOUD_POLL_MS = 10 * 1000;
  *
  * Renders nothing; it binds once and repaints when the Renown session changes.
  */
+
+const NOTHING = {
+  redeemed: false,
+  reserved: false,
+  databaseReady: false,
+  pulling: false,
+  starting: false,
+  serving: false,
+};
 
 /** Set before leaving for Renown, so the return resumes here; carries a
     `?env=` deep link through the round trip. */
@@ -98,7 +113,13 @@ export function LoginController() {
       deepLink.current = null;
     }
 
+    /* Which cloud setup run may still draw on the page; a new number cancels the old. */
+    let run = 0;
     function step(name: string) {
+      if (name !== "busy") {
+        run++;
+        clearSetup();
+      }
       panel!.querySelectorAll<HTMLElement>("[data-step]").forEach((el) => {
         el.hidden = el.dataset.step !== name;
       });
@@ -108,10 +129,87 @@ export function LoginController() {
       if (first) setTimeout(() => first.focus(), 0);
     }
     function busy(text: string) {
+      clearSetup();
       $("[data-site-busy-text]").textContent = text;
       step("busy");
     }
+
+    /* The setup checklist lives inside the busy step (whose markup is the
+       design system's): built here, removed when the step is left or fails. */
+    const busyStep = () => $<HTMLElement>('[data-step="busy"]');
+    function clearSetup() {
+      const stepEl = busyStep();
+      stepEl.querySelectorAll(".site-setup, .site-setup__host, .site-setup__footer, .site-setup__status").forEach((el) => el.remove());
+      stepEl.querySelector<HTMLElement>(".site-busy")!.hidden = false;
+      stepEl.querySelector<HTMLElement>(".sk-modal__title")!.textContent = "One moment";
+    }
+    function renderSetup(steps: StepState[], start: number, host: string | null) {
+      const stepEl = busyStep();
+      const title = stepEl.querySelector<HTMLElement>(".sk-modal__title")!;
+      title.textContent = "Setting up your Sektar";
+      stepEl.querySelector<HTMLElement>(".site-busy")!.hidden = true;
+      let hostEl = stepEl.querySelector<HTMLElement>(".site-setup__host");
+      let list = stepEl.querySelector<HTMLOListElement>("ol.site-setup");
+      let fresh = false;
+      if (!list) {
+        fresh = true;
+        hostEl = document.createElement("p");
+        hostEl.className = "site-setup__host";
+        list = document.createElement("ol");
+        list.className = "site-setup";
+        const footer = document.createElement("p");
+        footer.className = "site-setup__footer";
+        footer.textContent =
+          "Usually about 3 minutes. You can close this: it stays listed under “On this device”.";
+        // One polite live region for the whole checklist: it holds only the
+        // current step, so a poll that changes nothing announces nothing.
+        const status = document.createElement("p");
+        status.className = "site-setup__status";
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        title.after(hostEl, status, list, footer);
+      }
+      const announce = stepEl.querySelector<HTMLElement>(".site-setup__status")!;
+      const now = steps.find((s) => s.current);
+      const said = now ? `${now.label}${now.sub ? `: ${now.sub}` : ""}` : "";
+      announce.dataset.say = said;
+      // A live region only announces changes made after it is in the DOM: the
+      // first text goes in on a later tick.
+      const write = () => {
+        const text = announce.dataset.say ?? "";
+        if (announce.textContent !== text) announce.textContent = text;
+      };
+      if (fresh) setTimeout(write, 100);
+      else write();
+      hostEl!.textContent = host ?? "";
+      hostEl!.hidden = !host;
+      list.textContent = "";
+      for (const s of steps) {
+        const li = document.createElement("li");
+        li.className = s.done ? "is-done" : s.current ? "is-current" : "";
+        if (s.current) li.setAttribute("aria-current", "step");
+        const label = document.createElement("span");
+        label.className = "site-setup__label";
+        label.textContent = s.label;
+        li.append(label);
+        if (s.sub) {
+          const sub = document.createElement("span");
+          sub.className = "site-setup__sub";
+          sub.textContent = s.sub;
+          li.append(sub);
+        }
+        if (s.done && s.doneAt !== null) {
+          const time = document.createElement("span");
+          time.className = "site-setup__time";
+          time.textContent = elapsed(start, s.doneAt);
+          li.append(time);
+        }
+        list.append(li);
+      }
+      step("busy");
+    }
     function fail(text: string) {
+      clearSetup();
       $("[data-site-fail-text]").textContent = text;
       step("failed");
     }
@@ -232,51 +330,111 @@ export function LoginController() {
       busy(`Opening ${new URL(env.url).hostname}…`);
       location.assign(env.url);
     }
+    function down(env: Environment) {
+      $("[data-site-down-host]").textContent = new URL(env.url).hostname;
+      $('[data-step="down"] .sk-modal__title').textContent =
+        env.kind === "vetra" ? "Your cloud isn't answering" : "Your computer isn't answering";
+      step("down");
+    }
     function go(user: User, env: Environment, keep: boolean) {
+      const mine = ++run;
+      const stale = () => run !== mine;
       pending = { user, env, keep };
       if (keep) remember(user.did, env);
-      busy(`Looking for ${new URL(env.url).hostname}…`);
-      void answers(env.url).then((ok) => {
-        if (ok) return navigate(env);
-        $("[data-site-down-host]").textContent = new URL(env.url).hostname;
-        $('[data-step="down"] .sk-modal__title').textContent =
-          env.kind === "vetra" ? "Your cloud isn't answering" : "Your computer isn't answering";
-        step("down");
-      });
+      const host = new URL(env.url).hostname;
+      busy(`Looking for ${host}…`);
+      if (env.kind !== "vetra") {
+        void answers(env.url).then((ok) => {
+          if (stale()) return; // a retry, or the person went elsewhere
+          return ok ? navigate(env) : down(env);
+        });
+        return;
+      }
+      // A cloud Sektar's load balancer answers while Sektar is still starting
+      // (503 "no available server"); wait for Sektar itself, a little while.
+      void (async () => {
+        const start = Date.now();
+        while (Date.now() - start < CLOUD_START_WAIT_MS) {
+          const serving = await serves(env.url);
+          if (stale()) return;
+          if (serving) return navigate(env);
+          const up = await answers(env.url);
+          if (stale()) return;
+          if (!up) return down(env);
+          busy(`${host} is starting… ${elapsed(start)}`);
+          await sleep(CLOUD_POLL_MS / 2);
+          if (stale()) return;
+        }
+        down(env);
+      })();
     }
 
     /* ------------------------------------------------ a new cloud Sektar */
     function sleep(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    /** Redeems the code, then waits until the directory lists a READY cloud Sektar, and opens it. */
+    /**
+     * Redeems the code, then waits for the cloud Sektar it made (not one the
+     * person already had) until it is READY and Sektar itself answers, and
+     * opens it.
+     */
     async function startCloud(user: User, code: string) {
+      const mine = ++run;
+      const stale = () => run !== mine;
       busy("Setting up your Sektar…");
-      const bearer = await directoryBearer();
-      if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
       try {
-        await redeemCloud(code, bearer);
-      } catch (err) {
-        return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
-      }
-      const deadline = Date.now() + CLOUD_WAIT_MS;
-      while (Date.now() < deadline) {
-        const found = (await fromDirectory(user.did, (await directoryBearer()) ?? bearer)).filter(
-          (e) => e.kind === "vetra",
-        );
-        const ready = found.find((e) => e.status === "READY");
-        if (ready) {
-          remember(user.did, ready);
-          return navigate(ready);
+        const AFTER_REDEEM = { ...NOTHING, redeemed: true };
+        const bearer = await directoryBearer();
+        if (stale()) return;
+        if (!bearer) return fail("Your sign-in expired. Sign in again, then use your code.");
+        // What the person had before: the directory's list and this browser's.
+        const before = [
+          ...knownEnvs(user.did).map((e) => e.url),
+          ...(await fromDirectory(user.did, bearer)).map((e) => e.url),
+        ];
+        if (stale()) return;
+        try {
+          await redeemCloud(code, bearer);
+        } catch (err) {
+          if (stale()) return;
+          return fail(`That code didn't work: ${err instanceof Error ? err.message : String(err)}`);
         }
-        busy(
-          found.length
-            ? "Starting your Sektar… This takes a few minutes the first time."
-            : "Setting up your Sektar…",
-        );
-        await sleep(CLOUD_POLL_MS);
+        if (stale()) return;
+        const start = Date.now();
+        const tenant: { host?: string; tenantId?: string } = {};
+        let steps: StepState[] = setupSteps(AFTER_REDEEM, null, start);
+        renderSetup(steps, start, null);
+        while (Date.now() - start < CLOUD_WAIT_MS) {
+          const token = (await directoryBearer()) ?? bearer;
+          if (stale()) return;
+          const made = newEnvironment(before, await fromDirectory(user.did, token));
+          if (stale()) return;
+          if (made) remember(user.did, made);
+          const host = made ? new URL(made.url).hostname : null;
+          const seen = host ? await fetchSetupSignals(host, token, tenant) : null;
+          const serving = made?.status === "READY" && (await serves(made.url));
+          if (stale()) return;
+          steps = setupSteps(
+            {
+              redeemed: true,
+              reserved: Boolean(made),
+              databaseReady: seen?.databaseReady ?? false,
+              pulling: seen?.pulling ?? false,
+              starting: seen?.starting ?? false,
+              serving,
+            },
+            steps,
+            Date.now(),
+          );
+          if (serving && made) return navigate(made);
+          renderSetup(steps, start, host);
+          await sleep(CLOUD_POLL_MS);
+          if (stale()) return;
+        }
+        fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
+      } catch (err) {
+        if (!stale()) fail(`Setting up your Sektar failed: ${err instanceof Error ? err.message : String(err)}`);
       }
-      fail("Your Sektar is still starting. Come back in a few minutes: it will be listed here.");
     }
     function onInvite(e: SubmitEvent) {
       e.preventDefault();
@@ -353,6 +511,7 @@ export function LoginController() {
     if (returning.current) busy("Checking your sign-in…");
 
     return () => {
+      run++; // an unmounted controller's in-flight runs stop
       panel.removeEventListener("click", onPanelClick);
       form.removeEventListener("submit", onSubmit);
       invite.removeEventListener("submit", onInvite);
@@ -435,7 +594,7 @@ function inviteForm(where: HTMLFormElement): HTMLFormElement {
   form.innerHTML = `
     <div class="sk-field">
       <label class="sk-label" for="site-invite-input">Invite code</label>
-      <input id="site-invite-input" class="sk-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="sektar-…">
+      <input id="site-invite-input" class="sk-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="vetra-…">
       <p class="sk-hint">New here? Your code gives you your own Sektar in the cloud, set up in a few minutes.</p>
     </div>
     <div class="sk-modal__footer sk-mt-4"><button class="sk-btn sk-btn--primary" type="submit">Start my cloud Sektar</button></div>

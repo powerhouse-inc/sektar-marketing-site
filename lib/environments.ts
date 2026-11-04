@@ -9,6 +9,7 @@ import {
   VETRA_GRAPHQL_URL,
   PORTLE_URL_TEMPLATE,
 } from "@/lib/config";
+import { querySetupSignals } from "@/lib/setup-signals";
 
 export type EnvKind = "portle" | "vetra";
 
@@ -168,6 +169,29 @@ export async function answers(url: string): Promise<boolean> {
 }
 
 /**
+ * Whether Sektar itself answers at `url`, not just something in front of it.
+ * A cloud Sektar that Vetra lists as READY can still be booting: for a minute
+ * or two its load balancer answers 503 "no available server". Connect serves
+ * `build-hash.json` with `access-control-allow-origin: *`, so a CORS request
+ * can read the status, which the `no-cors` probe in `answers` cannot.
+ */
+export async function serves(url: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  try {
+    const response = await fetch(new URL("build-hash.json", url.endsWith("/") ? url : `${url}/`), {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Redeems an invite code for a cloud Sektar on Vetra, as the signed-in person
  * (their Renown bearer). Vetra then sets up their own Sektar; the directory
  * lists it, READY once it runs. Throws with Vetra's message when refused.
@@ -189,3 +213,15 @@ export async function redeemCloud(code: string, bearer: string): Promise<void> {
   if (!response.ok || message) throw new Error(message || `Vetra answered ${response.status}`);
 }
 
+/**
+ * What Vetra shows of a new environment's setup: the database pod, the app
+ * image being pulled, the app pod running. Any error or refusal (the owner is
+ * not set yet) answers all false; it never throws.
+ */
+export function fetchSetupSignals(
+  host: string,
+  bearer: string,
+  memo?: { host?: string; tenantId?: string },
+): Promise<{ databaseReady: boolean; pulling: boolean; starting: boolean }> {
+  return querySetupSignals(VETRA_GRAPHQL_URL, host, bearer, fetch, memo);
+}

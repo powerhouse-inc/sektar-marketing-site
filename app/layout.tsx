@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/dal";
 import { SITE_URL } from "@/lib/config";
 import { loadSiteMeta } from "@/lib/site-html";
 import { Providers } from "./providers";
+import "./setup.css";
 
 /* Inter, self-hosted at build time (no request to Google from the visitor's
    browser), under the family name the design system's tokens use. */

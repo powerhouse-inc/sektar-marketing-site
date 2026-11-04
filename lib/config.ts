@@ -2,6 +2,8 @@
    Adapter-free on purpose, so server modules (dal.ts, proxy.ts) can read it;
    the wallet adapters live in ./renown/wallet-adapters. */
 
+import { pollInterval } from "./poll-interval";
+
 export type RenownLoginMode = "embedded" | "redirect";
 
 /* "redirect" sends the user to the Renown portal and back; "embedded" signs in
@@ -71,3 +73,7 @@ export const VETRA_GRAPHQL_URL =
 /* Sektar's App on Vetra: the directory lists environments that run it. */
 export const DIRECTORY_APP =
   process.env.NEXT_PUBLIC_DIRECTORY_APP ?? "43622402-be06-435a-bbfa-bb649b0d6244";
+
+/* How often the site asks how a new cloud Sektar's setup is going, in ms.
+   Tests set a short one; people get 10 s. */
+export const CLOUD_POLL_MS = pollInterval(process.env.NEXT_PUBLIC_CLOUD_POLL_MS);
